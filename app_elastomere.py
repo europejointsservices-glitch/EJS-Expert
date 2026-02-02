@@ -62,4 +62,7 @@ for index, row in df_tri.iterrows():
             <span style="color: {color}; font-weight: bold; border: 1px solid {color}; padding: 2px 8px; border-radius: 5px;">{statut}</span>
         </div>
         <p style="margin: 10px 0 0 0;">Matière : {row['Famille']} | Score : <span style="color:{color}; font-weight:bold;">{row['Score']}/10</span></p>
-        <p
+        <p style="margin: 5px 0 0 0; font-size: 0.8em; color: #BBB;">Plage : {row['Temp Min']}°C à {row['Temp Max']}°C</p>
+    </div>
+    """
+    st.markdown(card_html, unsafe_allow_html=True)
