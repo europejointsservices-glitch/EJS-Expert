@@ -4,11 +4,10 @@ import pandas as pd
 # 1. Configuration de l'interface
 st.set_page_config(page_title="Expert Sélecteur EJS", layout="wide")
 
-# TITRE SIMPLIFIÉ SELON VOTRE DEMANDE
 st.title("🧪 Expert Sélecteur EJS")
-st.subheader("Base Ultra-Expert : 500+ Fluides & 17 Familles d'Élastomères")
+st.subheader("Base Expert avec 500 Fluides")
 
-# --- BASE DE DONNÉES (Structure corrigée pour 17 lignes) ---
+# --- BASE DE DONNÉES (Structure v11.4 maintenue) ---
 data = {
     "Famille Générique": [
         "EPDM", "NBR", "Viton™ A", "Viton™ GF-S", "Viton™ GFLT-S", "Viton™ Extreme ETP", 
@@ -22,17 +21,17 @@ data = {
     "Temp Min": [-50, -30, -20, -15, -15, -35, -40, -10, -20, -15, -10, -60, -200, -60, -100, -50, -30],
     "Temp Max": [150, 100, 200, 230, 200, 230, 150, 200, 260, 250, 320, 200, 260, 175, 200, 80, 100],
     
-    # --- OPTIONS & FLUIDES (Échantillon représentatif 500+) ---
+    # --- OPTIONS & FLUIDES ---
     "SANS CHOIX": [0]*17,
     "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 4, 4, 3, 2],
     "Vapeur (SEP 140°C)": [5, 1, 2, 3, 2, 4, 3, 5, 5, 5, 5, 3, 5, 2, 3, 1, 1],
     "Soude (NEP 2%)": [5, 4, 1, 2, 1, 4, 4, 5, 5, 5, 5, 2, 5, 2, 2, 2, 1],
     "Acide Sulfurique 98%": [4, 1, 3, 5, 5, 5, 1, 3, 5, 5, 5, 1, 5, 4, 3, 1, 1],
     "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 1, 1, 5],
-    "Eau Potable / Glycolée": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 5, 5, 5]
+    "Eau Potable / Glycolée": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 5, 5, 5],
+    "Air Comprimé": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
 }
 
-# Mapping Références Europe Joints Services (17 Familles)
 ejs_refs = {
     "AUCUNE SÉLECTION": None,
     "EJS-E70P": "EPDM", "EJS-N70": "NBR", "EJS-V70": "Viton™ A",
@@ -59,7 +58,6 @@ with st.sidebar:
     st.header("⚙️ Configuration")
     cols_tech = ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max", "Qualité DRC"]
     liste_fluides = sorted([c for c in df.columns if c not in cols_tech])
-    
     idx_sans_choix = liste_fluides.index("SANS CHOIX")
     
     f1 = st.selectbox("Fluide 1", liste_fluides, index=0)
@@ -74,8 +72,9 @@ with st.sidebar:
     ref_ejs_choisie = st.selectbox("Référence Europe Joints Services", list(ejs_refs.keys()))
     famille_cible = ejs_refs[ref_ejs_choisie]
 
-# --- CALCULS ---
+# --- CALCULS ET TRI PAR SCORE (ORDRE DÉCROISSANT) ---
 df["Score"] = df[f1] + df[f2]
+# Tri décroissant : les meilleurs scores (en vert) arrivent en premier
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
 # --- AFFICHAGE ---
@@ -86,16 +85,19 @@ for index, row in df_tri.iterrows():
     is_ref = famille_cible == row["Famille Générique"]
     temp_valid = row["Temp Min"] <= t_service <= row["Temp Max"]
     
+    # Seuil dynamique selon le nombre de fluides (1 ou 2)
+    seuil_excellent = 4 if f2 == "SANS CHOIX" else 8
+    
     if not temp_valid:
-        b_color, bg_color = "#dc3545", "rgba(220, 53, 69, 0.7)"
-    elif row["Score"] >= (4 if f2 == "SANS CHOIX" else 8):
-        b_color, bg_color = "#28a745", "rgba(40, 167, 69, 0.7)"
+        b_color, bg_color = "#dc3545", "rgba(220, 53, 69, 0.7)" # Rouge : Température HS
+    elif row["Score"] >= seuil_excellent:
+        b_color, bg_color = "#28a745", "rgba(40, 167, 69, 0.7)" # Vert : Meilleures matières
     else:
-        b_color, bg_color = "#fd7e14", "rgba(253, 126, 20, 0.7)"
+        b_color, bg_color = "#fd7e14", "rgba(253, 126, 20, 0.7)" # Orange : Matières moyennes
 
     b_style = f"6px solid white" if is_ref else f"2px solid {b_color}"
 
-    # Bloc HTML avec f-string simple pour éviter SyntaxError sur f-strings complexes
+    # Construction HTML sécurisée
     fiche_html = f'<div style="border: {b_style}; border-radius: 12px; padding: 20px; margin-bottom: 15px; background-color: {bg_color}; color: white;">'
     fiche_html += '<div style="display: flex; justify-content: space-between; align-items: center;">'
     fiche_html += f'<b style="font-size: 1.4em;">{row["Famille Générique"]} {"⭐" if is_ref else ""}</b>'
@@ -104,10 +106,9 @@ for index, row in df_tri.iterrows():
     fiche_html += '<hr style="margin: 10px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">'
     fiche_html += f'<p style="margin: 5px 0;"><b>🔍 Synopsis :</b> {f1} ({row[f1]}/5) {f" + {f2} ({row[f2]}/5)" if f2 != "SANS CHOIX" else ""}</p>'
     fiche_html += f'<p style="margin: 10px 0 0 0; font-size: 0.95em;">'
-    fiche_html += f'<b>Usage :</b> {row["Spécificité"]} | <b>Plage :</b> {row["Temp Min"]}°C / {row['Temp Max']}°C</p></div>'
+    fiche_html += f'<b>Usage :</b> {row["Spécificité"]} | <b>Plage :</b> {row["Temp Min"]}°C / {row["Temp Max"]}°C</p></div>'
     
     st.markdown(fiche_html, unsafe_allow_html=True)
 
 st.write("---")
-st.write("### 📊 Synthèse Comparative Complète")
 st.dataframe(df_tri.drop(columns=["Qualité DRC", "SANS CHOIX"]), use_container_width=True)
