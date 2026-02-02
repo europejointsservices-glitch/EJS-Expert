@@ -5,8 +5,8 @@ import pandas as pd
 st.set_page_config(page_title="EJS Expert v9.9.1", layout="wide")
 
 # TITRE MODIFIÉ : Retrait de "& SAUMURE" selon votre demande
-st.title("🧪 Expert Élastomères EJS v9.9.1")
-st.subheader("Base Expert 100+ Fluides - Spécialités")
+st.title("🧪 Expert en Élastomères EJS v9.9.1")
+st.subheader("Base Expert EJS 100+ Fluides - Spécialités")
 
 # --- BASE DE DONNÉES V9.4 + SAUMURE (Corrections syntaxiques lignes 31, 43, 85, 86) ---
 data = {
@@ -119,3 +119,4 @@ for index, row in df_tri.iterrows():
 st.write("---")
 st.write("### 📊 Synthèse Comparative Complète")
 st.dataframe(df_tri.drop(columns=["Qualité DRC"]), use_container_width=True)
+
