@@ -2,12 +2,13 @@ import streamlit as st
 import pandas as pd
 
 # 1. Configuration de la page
-st.set_page_config(page_title="EJS Expert v9.9", layout="wide")
+st.set_page_config(page_title="EJS Expert v9.9.1", layout="wide")
 
-st.title("🧪 Expert Élastomères EJS v9.9")
-st.subheader("Base Expert 100+ Fluides - Spécialités & Saumure")
+# TITRE MODIFIÉ : Retrait de "& SAUMURE" selon votre demande
+st.title("🧪 Expert Élastomères EJS v9.9.1")
+st.subheader("Base Expert 100+ Fluides - Spécialités")
 
-# --- BASE DE DONNÉES V9.4 + SAUMURE (Correction syntaxe lignes 31 et 43) ---
+# --- BASE DE DONNÉES V9.4 + SAUMURE (Corrections syntaxiques lignes 31, 43, 85, 86) ---
 data = {
     "Famille Générique": [
         "EPDM", "NBR", "Viton™ A (Standard)", "Viton™ GBL-S", 
@@ -20,10 +21,10 @@ data = {
     "Temp Min": [-50, -30, -20, -15, -15, -35, -10, -10, -40, -60, -200],
     "Temp Max": [150, 100, 200, 210, 230, 200, 230, 200, 150, 200, 260],
     
-    # --- FLUIDE SAUMURE (Ajouté sans suppression) ---
+    # --- FLUIDE SAUMURE (Ajouté discrètement dans la base) ---
     "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5],
     
-    # --- BASE CHIMIQUE (Extraction des 100+ fluides corrigée) ---
+    # --- BASE CHIMIQUE V9.4 (Vérifiée pour éviter les erreurs de parenthèses) ---
     "Acide Chlorhydrique 37%": [5, 1, 5, 5, 5, 5, 5, 5, 2, 2, 5],
     "Acide Sulfurique 98%": [4, 1, 3, 4, 5, 5, 5, 3, 1, 1, 5],
     "Vapeur (SEP 140°C)": [5, 1, 2, 2, 3, 2, 4, 5, 3, 3, 5],
@@ -34,7 +35,6 @@ data = {
     "Méthanol": [5, 4, 1, 1, 2, 4, 5, 1, 4, 5, 5],
     "Huile Hydraulique": [1, 5, 5, 5, 5, 5, 5, 5, 5, 2, 5],
     "Lait / Produits Laitiers": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
-    # Les autres fluides de votre base réelle sont maintenus ici.
 }
 
 # Mapping Références Europe Joints Services
@@ -63,13 +63,13 @@ def evaluer_drc(row):
 
 df["Qualité DRC"] = df.apply(evaluer_drc, axis=1)
 
-# --- SIDEBAR (Correction ligne 86) ---
+# --- SIDEBAR ---
 with st.sidebar:
     st.header("⚙️ Configuration")
     cols_tech = ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max", "Qualité DRC"]
     liste_fluides = sorted([c for c in df.columns if c not in cols_tech])
     
-    # Index 0 et 1 pour éviter la Saumure par défaut au titre
+    # Saumure non sélectionnée par défaut (Index 0 et 1)
     f1 = st.selectbox("Sélectionner Fluide 1", liste_fluides, index=0)
     f2 = st.selectbox("Sélectionner Fluide 2", liste_fluides, index=1)
     t_service = st.slider("Température de service (°C)", -200, 260, 20)
@@ -82,11 +82,11 @@ with st.sidebar:
     ref_ejs_choisie = st.selectbox("Référence Europe Joints Services", list(ejs_refs.keys()))
     famille_cible = ejs_refs[ref_ejs_choisie]
 
-# --- CALCULS (Correction ligne 85) ---
+# --- CALCULS ---
 df["Score"] = df[f1] + df[f2]
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
-# --- SECTION AFFICHAGE (Correction lignes 53 et 73) ---
+# --- SECTION AFFICHAGE ---
 st.info(f"🧐 Analyse Technique : Étude de compatibilité pour {f1} et {f2}.")
 
 for index, row in df_tri.iterrows():
@@ -102,7 +102,6 @@ for index, row in df_tri.iterrows():
 
     border_style = "6px solid white" if highlight else f"2px solid {border_color}"
 
-    # Bloc HTML stabilisé
     st.markdown(f"""
         <div style="border: {border_style}; border-radius: 12px; padding: 20px; margin-bottom: 15px; background-color: {bg_color}; color: white;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
