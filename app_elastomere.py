@@ -1,65 +1,67 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration (Mode large v5.6)
-st.set_page_config(page_title="EJS Expert v9.3", layout="wide")
+# 1. Configuration
+st.set_page_config(page_title="EJS Expert v9.4", layout="wide")
 
-st.title("🧪 Expert Élastomères EJS v9.3")
-st.subheader("Base 100 Fluides - Élastomères de Spécialités & Réf. EJS")
+st.title("🧪 Expert Élastomères EJS v9.4")
+st.subheader("Base 100 Fluides - Grades Viton™ Spéciaux & Réf. EJS")
 
-# --- BASE DE DONNÉES ENRICHIE (Nomenclature Technique) ---
+# --- BASE DE DONNÉES ENRICHIE (Focus Spécialités) ---
 data = {
     "Famille Générique": [
-        "EPDM", "NBR", "FKM (Standard)", "FKM (Spécialité GF/ETP)", 
-        "HNBR", "AFLAS (FEPM)", "Silicone", "PTFE"
+        "EPDM", "NBR", "Viton™ A (Standard)", "Viton™ GBL-S", 
+        "Viton™ GF-S", "Viton™ GFLT-S", "Viton™ Extreme ETP", 
+        "AFLAS (FEPM)", "HNBR", "Silicone", "PTFE"
     ],
-    "Dureté": ["70 ShA", "70 ShA", "75 ShA", "75 ShA", "70 ShA", "80 ShA", "70 ShA", "60 ShD"],
-    "Couleur": ["Noir", "Noir", "Noir", "Vert/Brun", "Noir", "Noir", "Rouge", "Blanc"],
-    "Norme": ["FDA/EC1935", "Standard", "Standard", "Chimie Sévère", "Pétrole", "Vapeur/Base", "FDA", "FDA"],
-    "Temp Min": [-50, -30, -20, -15, -40, -10, -60, -200],
-    "Temp Max": [150, 100, 200, 230, 150, 200, 200, 260],
-    # --- FLUIDES (Exemple d'application pour les spécialités) ---
-    "Vapeur (SEP 140°C)": [5, 1, 2, 4, 3, 5, 3, 5],
-    "Soude (NEP 2%)": [5, 4, 1, 3, 4, 5, 2, 5],
-    "Acide Nitrique (NEP 1%)": [2, 1, 4, 5, 2, 4, 1, 5],
-    "Eau Potable": [5, 5, 5, 5, 5, 5, 5, 5],
-    "Graisse Animale": [1, 5, 5, 5, 5, 4, 4, 5],
-    "Huile Végétale": [1, 5, 5, 5, 5, 5, 4, 5],
-    "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 1, 5],
-    "Huile Hydraulique": [1, 5, 5, 5, 5, 5, 2, 5],
-    "Acide Chlorhydrique 37%": [5, 1, 5, 5, 2, 5, 2, 5],
-    "Soude Caustique": [5, 4, 1, 3, 4, 5, 2, 5],
-    # ... conservez vos 100 fluides ici avec 8 notes au lieu de 5
+    "Dureté": ["70 ShA", "70 ShA", "75 ShA", "75 ShA", "75 ShA", "75 ShA", "75 ShA", "80 ShA", "70 ShA", "70 ShA", "60 ShD"],
+    "Couleur": ["Noir", "Noir", "Noir", "Noir", "Vert", "Noir", "Noir", "Noir", "Noir", "Rouge", "Blanc"],
+    "Spécificité": ["Alimentaire", "Standard", "Standard", "Haute teneur Fluor", "Chimie Sévère", "Basse Température", "Universalité Chimique", "Vapeur/Base", "Pétrole/Chaleur", "FDA", "Total"],
+    "Temp Min": [-50, -30, -20, -15, -15, -35, -10, -10, -40, -60, -200],
+    "Temp Max": [150, 100, 200, 210, 230, 200, 230, 200, 150, 200, 260],
+    
+    # --- FLUIDES (Exemple d'impact des grades spéciaux) ---
+    "Vapeur (SEP 140°C)": [5, 1, 2, 2, 3, 2, 4, 5, 3, 3, 5],
+    "Soude (NEP 2%)": [5, 4, 1, 1, 2, 1, 4, 5, 4, 2, 5],
+    "Acide Sulfurique 98%": [4, 1, 3, 4, 5, 5, 5, 3, 1, 1, 5],
+    "Solvants Oxygénés": [4, 1, 1, 1, 2, 1, 5, 3, 1, 2, 5],
+    "Méthanol": [5, 4, 1, 1, 2, 4, 5, 1, 4, 5, 5],
+    "Graisse Animale": [1, 5, 5, 5, 5, 5, 5, 4, 5, 4, 5],
+    "Eau Potable": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5],
+    # ... Les autres fluides de la v9 sont maintenus dans vos colonnes
 }
 
-# Mapping Références EJS (Mis à jour avec les spécialités)
+# Mapping Références EJS (Ciblage des grades)
 ejs_refs = {
     "AUCUNE SÉLECTION": None,
-    "EJS-E70P (EPDM)": "EPDM",
-    "EJS-N70 (NBR)": "NBR",
-    "EJS-V70 (FKM Std)": "FKM (Standard)",
-    "EJS-V75GF (FKM Spé)": "FKM (Spécialité GF/ETP)",
-    "EJS-H70 (HNBR)": "HNBR",
-    "EJS-AF80 (AFLAS)": "AFLAS (FEPM)",
-    "EJS-S70 (Silicone)": "Silicone",
-    "EJS-P70 (PTFE)": "PTFE"
+    "EJS-E70P": "EPDM",
+    "EJS-N70": "NBR",
+    "EJS-V70": "Viton™ A (Standard)",
+    "EJS-V75GBL": "Viton™ GBL-S",
+    "EJS-V75GF": "Viton™ GF-S",
+    "EJS-V75GFLT": "Viton™ GFLT-S",
+    "EJS-V75ETP": "Viton™ Extreme ETP",
+    "EJS-AF80": "AFLAS (FEPM)",
+    "EJS-H70": "HNBR",
+    "EJS-S70": "Silicone",
+    "EJS-P70": "PTFE"
 }
 
 df = pd.DataFrame(data)
 
-# --- LOGIQUE DRC (Enrichie pour les spécialités) ---
+# --- LOGIQUE DRC ---
 def evaluer_drc(row):
-    # Les spécialités comme AFLAS ou FKM GF sont classées en Excellence
-    if any(x in row["Famille Générique"] for x in ["PTFE", "FKM", "AFLAS"]): return "Excellente"
+    if any(x in row["Famille Générique"] for x in ["PTFE", "Viton™", "AFLAS"]): return "Excellente"
     elif any(x in row["Famille Générique"] for x in ["EPDM", "NBR", "HNBR"]): return "Moyenne"
     else: return "Basse"
 
 df["Qualité DRC"] = df.apply(evaluer_drc, axis=1)
 
-# --- SIDEBAR (Hiérarchie EJS) ---
+# --- SIDEBAR ---
 with st.sidebar:
     st.header("⚙️ Configuration")
-    cols_tech = ["Famille Générique", "Dureté", "Couleur", "Norme", "Temp Min", "Temp Max", "Qualité DRC"]
+    cols_tech = ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max", "Qualité DRC"]
     liste_fluides = sorted([c for c in df.columns if c not in cols_tech])
     
     f1 = st.selectbox("Sélectionner Fluide 1", liste_fluides)
@@ -70,7 +72,7 @@ with st.sidebar:
     choix_drc = st.multiselect("Filtrer par Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Excellente", "Moyenne"])
     
     st.write("---")
-    st.subheader("🛒 Référence Commerciale")
+    st.subheader("🛒 Référence Commerciale EJS")
     ref_ejs_choisie = st.selectbox("Référence Europe Joints Services", list(ejs_refs.keys()))
     famille_cible = ejs_refs[ref_ejs_choisie]
 
@@ -79,9 +81,9 @@ df["Score"] = df[f1] + df[f2]
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
 # --- SYNOPSIS ---
-st.info(f"🧐 **Analyse EJS v9.3 :** Expertise incluant les élastomères de spécialités pour conditions extrêmes.")
+st.info(f"🧐 **Expertise EJS v9.4 :** Analyse comparative des grades Viton™ de spécialité face à **{f1}** et **{f2}**.")
 
-# --- SECTION 1 : FICHES (TEXTE BLANC) ---
+# --- SECTION 1 : FICHES ---
 for index, row in df_tri.iterrows():
     highlight = famille_cible == row["Famille Générique"]
     temp_ok = row["Temp Min"] <= t_service <= row["Temp Max"]
@@ -98,18 +100,18 @@ for index, row in df_tri.iterrows():
     st.markdown(f"""
         <div style="border: {border_style}; border-radius: 12px; padding: 20px; margin-bottom: 15px; background-color: {bg_color}; color: white;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <b style="font-size: 1.4em;">{row['Famille Générique']} {"⭐ (VOTRE RÉFÉRENCE)" if highlight else ""}</b>
+                <b style="font-size: 1.4em;">{row['Famille Générique']} {"⭐" if highlight else ""}</b>
                 <b style="font-size: 1.2em; color: black; background: white; padding: 4px 12px; border-radius: 8px;">Score : {row['Score']}/10</b>
             </div>
-            <hr style="margin: 15px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">
             <p style="margin: 5px 0;"><b>🔍 Synopsis des notes chimiques :</b> {f1} (<b>{row[f1]}/5</b>) + {f2} (<b>{row[f2]}/5</b>)</p>
             <p style="margin: 10px 0 0 0; font-size: 0.95em;">
-            <b>Spécificité :</b> {row['Norme']} | <b>Dureté :</b> {row['Dureté']} | <b>Plage :</b> {row['Temp Min']}°C / {row['Temp Max']}°C
+            <b>Usage :</b> {row['Spécificité']} | <b>Temp :</b> {row['Temp Min']}°C à {row['Temp Max']}°C
             </p>
         </div>
     """, unsafe_allow_html=True)
 
 # --- SECTION 2 : TABLEAU ---
 st.write("---")
-st.write("### 📊 Synthèse Comparative Complète (Spécialités incluses)")
+st.write("### 📊 Synthèse Comparative des Grades de Spécialité")
 st.dataframe(df_tri.drop(columns=["Qualité DRC"]), use_container_width=True)
