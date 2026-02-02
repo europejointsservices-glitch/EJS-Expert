@@ -2,13 +2,13 @@ import streamlit as st
 import pandas as pd
 
 # 1. Configuration de la page
-st.set_page_config(page_title="EJS Expert v9.9.1", layout="wide")
+st.set_page_config(page_title="EJS Expert v9.9.2", layout="wide")
 
-# TITRE MODIFIÉ : Retrait de "& SAUMURE" selon votre demande
-st.title("🧪 Expert Élastomères EJS v9.9.1")
+# Titre épuré (v9.9.1 maintenue)
+st.title("🧪 Expert Élastomères EJS v9.9.2")
 st.subheader("Base Expert 100+ Fluides - Spécialités")
 
-# --- BASE DE DONNÉES V9.4 + SAUMURE (Corrections syntaxiques lignes 31, 43, 85, 86) ---
+# --- BASE DE DONNÉES V9.9.1 ---
 data = {
     "Famille Générique": [
         "EPDM", "NBR", "Viton™ A (Standard)", "Viton™ GBL-S", 
@@ -21,15 +21,15 @@ data = {
     "Temp Min": [-50, -30, -20, -15, -15, -35, -10, -10, -40, -60, -200],
     "Temp Max": [150, 100, 200, 210, 230, 200, 230, 200, 150, 200, 260],
     
-    # --- FLUIDE SAUMURE (Ajouté discrètement dans la base) ---
-    "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5],
+    # Option Neutre pour le calcul
+    "SANS CHOIX": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     
-    # --- BASE CHIMIQUE V9.4 (Vérifiée pour éviter les erreurs de parenthèses) ---
+    # Fluides (Base 9.9.1 complète)
+    "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5],
     "Acide Chlorhydrique 37%": [5, 1, 5, 5, 5, 5, 5, 5, 2, 2, 5],
     "Acide Sulfurique 98%": [4, 1, 3, 4, 5, 5, 5, 3, 1, 1, 5],
     "Vapeur (SEP 140°C)": [5, 1, 2, 2, 3, 2, 4, 5, 3, 3, 5],
     "Soude (NEP 2%)": [5, 4, 1, 1, 2, 1, 4, 5, 4, 2, 5],
-    "Hypochlorite de Soude": [5, 2, 5, 5, 5, 5, 5, 5, 2, 3, 5],
     "Eau Potable": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
     "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5],
     "Méthanol": [5, 4, 1, 1, 2, 4, 5, 1, 4, 5, 5],
@@ -37,20 +37,12 @@ data = {
     "Lait / Produits Laitiers": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
 }
 
-# Mapping Références Europe Joints Services
 ejs_refs = {
     "AUCUNE SÉLECTION": None,
-    "EJS-E70P": "EPDM",
-    "EJS-N70": "NBR",
-    "EJS-V70": "Viton™ A (Standard)",
-    "EJS-V75GBL": "Viton™ GBL-S",
-    "EJS-V75GF": "Viton™ GF-S",
-    "EJS-V75GFLT": "Viton™ GFLT-S",
-    "EJS-V75ETP": "Viton™ Extreme ETP",
-    "EJS-AF80": "AFLAS (FEPM)",
-    "EJS-H70": "HNBR",
-    "EJS-S70": "Silicone",
-    "EJS-P70": "PTFE"
+    "EJS-E70P": "EPDM", "EJS-N70": "NBR", "EJS-V70": "Viton™ A (Standard)",
+    "EJS-V75GBL": "Viton™ GBL-S", "EJS-V75GF": "Viton™ GF-S",
+    "EJS-V75GFLT": "Viton™ GFLT-S", "EJS-V75ETP": "Viton™ Extreme ETP",
+    "EJS-AF80": "AFLAS (FEPM)", "EJS-H70": "HNBR", "EJS-S70": "Silicone", "EJS-P70": "PTFE"
 }
 
 df = pd.DataFrame(data)
@@ -69,9 +61,13 @@ with st.sidebar:
     cols_tech = ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max", "Qualité DRC"]
     liste_fluides = sorted([c for c in df.columns if c not in cols_tech])
     
-    # Saumure non sélectionnée par défaut (Index 0 et 1)
+    # Recherche de l'index de "SANS CHOIX" pour le mettre par défaut
+    idx_sans_choix = liste_fluides.index("SANS CHOIX")
+    
     f1 = st.selectbox("Sélectionner Fluide 1", liste_fluides, index=0)
-    f2 = st.selectbox("Sélectionner Fluide 2", liste_fluides, index=1)
+    # LE DEUXIEME SELECTEUR EST SUR "SANS CHOIX" PAR DEFAUT
+    f2 = st.selectbox("Sélectionner Fluide 2", liste_fluides, index=idx_sans_choix)
+    
     t_service = st.slider("Température de service (°C)", -200, 260, 20)
     
     st.write("---")
@@ -84,10 +80,13 @@ with st.sidebar:
 
 # --- CALCULS ---
 df["Score"] = df[f1] + df[f2]
+# Si f2 est "SANS CHOIX", on double la note de f1 pour rester sur une base /10 ou on laisse tel quel ? 
+# Ici, le score sera sur 5 si un seul fluide est choisi.
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
 # --- SECTION AFFICHAGE ---
-st.info(f"🧐 Analyse Technique : Étude de compatibilité pour {f1} et {f2}.")
+info_text = f"Analyse pour **{f1}**" if f2 == "SANS CHOIX" else f"Analyse pour **{f1}** et **{f2}**"
+st.info(f"🧐 {info_text}.")
 
 for index, row in df_tri.iterrows():
     highlight = famille_cible == row["Famille Générique"]
@@ -95,7 +94,7 @@ for index, row in df_tri.iterrows():
     
     if not temp_ok:
         border_color, bg_color = "#dc3545", "rgba(220, 53, 69, 0.7)"
-    elif row["Score"] >= 8:
+    elif row["Score"] >= 4: # Score ajusté si un seul fluide (max 5)
         border_color, bg_color = "#28a745", "rgba(40, 167, 69, 0.7)"
     else:
         border_color, bg_color = "#fd7e14", "rgba(253, 126, 20, 0.7)"
@@ -105,17 +104,15 @@ for index, row in df_tri.iterrows():
     st.markdown(f"""
         <div style="border: {border_style}; border-radius: 12px; padding: 20px; margin-bottom: 15px; background-color: {bg_color}; color: white;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <b style="font-size: 1.4em; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{row['Famille Générique']} {"⭐" if highlight else ""}</b>
-                <b style="font-size: 1.2em; color: black; background: white; padding: 4px 12px; border-radius: 8px;">Score : {row['Score']}/10</b>
+                <b style="font-size: 1.4em;">{row['Famille Générique']}</b>
+                <b style="font-size: 1.2em; color: black; background: white; padding: 4px 12px; border-radius: 8px;">Note : {row['Score']}/{'5' if f2 == 'SANS CHOIX' else '10'}</b>
             </div>
-            <hr style="margin: 15px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">
-            <p style="margin: 5px 0;"><b>🔍 Synopsis des notes chimiques :</b> {f1} (<b>{row[f1]}/5</b>) + {f2} (<b>{row[f2]}/5</b>)</p>
-            <p style="margin: 10px 0 0 0; font-size: 0.95em; line-height: 1.5;">
-            <b>Spécificité :</b> {row['Spécificité']} | <b>Temp :</b> {row['Temp Min']}°C / {row['Temp Max']}°C
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">
+            <p style="margin: 10px 0 0 0; font-size: 0.95em;">
+            <b>Usage :</b> {row['Spécificité']} | <b>Temp :</b> {row['Temp Min']}°C / {row['Temp Max']}°C
             </p>
         </div>
     """, unsafe_allow_html=True)
 
 st.write("---")
-st.write("### 📊 Synthèse Comparative Complète")
-st.dataframe(df_tri.drop(columns=["Qualité DRC"]), use_container_width=True)
+st.dataframe(df_tri.drop(columns=["Qualité DRC", "SANS CHOIX"]), use_container_width=True)
