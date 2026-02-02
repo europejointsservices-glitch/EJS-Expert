@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration (Mode large v5.6)
-st.set_page_config(page_title="EJS Expert v7.2", layout="wide")
+# 1. Configuration de la page (Mode large v5.6)
+st.set_page_config(page_title="EJS Expert v7.3", layout="wide")
 
-st.title("🧪 Expert Élastomères EJS v7.2")
+st.title("🧪 Expert Élastomères EJS v7.3")
 st.subheader("Analyse Technique & Expertise Visuelle")
 
 # --- BASE DE DONNÉES (Strictement inchangée) ---
@@ -24,7 +24,7 @@ data = {
 
 df = pd.DataFrame(data)
 
-# --- LOGIQUE DRC (Filtre qualitatif automatique) ---
+# --- LOGIQUE DRC (Filtre qualitatif automatique sans modifier la base) ---
 def evaluer_drc(row):
     if any(x in row["Famille"] for x in ["PTFE", "FKM"]): return "Excellente"
     elif any(x in row["Famille"] for x in ["EPDM", "NBR"]): return "Moyenne"
@@ -43,7 +43,7 @@ with st.sidebar:
     t_service = st.slider("Température de service (°C)", -200, 260, 20)
     
     st.write("---")
-    # MODIFICATION ICI : default=["Moyenne"]
+    # CONFIGURATION DU SÉLECTEUR : Défaut sur "Moyenne" uniquement
     choix_drc = st.multiselect(
         "Filtrer par Qualité DRC", 
         ["Excellente", "Moyenne", "Basse"], 
@@ -52,10 +52,11 @@ with st.sidebar:
 
 # --- CALCULS ET TRI ---
 df["Score"] = df[f1] + df[f2]
+# Filtrage dynamique selon le choix de la liste déroulante
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
 # --- SYNOPSIS ---
-st.info(f"🧐 **Synopsis :** Étude sur **{f1}** et **{f2}**. Affichage filtré par défaut sur la qualité DRC Moyenne.")
+st.info(f"🧐 **Synopsis :** Analyse sur **{f1}** et **{f2}**. La vue est initialement filtrée sur les DRC 'Moyenne'.")
 
 # --- SECTION 1 : FICHES DÉTAILLÉES (TEXTE BLANC) ---
 st.write("### 📑 Détail des Notes et Synopsis par Matériau")
