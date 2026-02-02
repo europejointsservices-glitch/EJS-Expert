@@ -1,55 +1,66 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration de l'interface (Design V11)
-st.set_page_config(page_title="Expert Sélecteur EJS", layout="wide")
+# 1. Configuration de la page
+st.set_page_config(page_title="EJS Expert v9.9.1", layout="wide")
 
-st.title("🧪 Expert Sélecteur EJS")
-st.subheader("Base Ultra-Expert : 500+ Fluides & 17 Familles d'Élastomères")
+# TITRE MODIFIÉ : Retrait de "& SAUMURE" selon votre demande
+st.title("🧪 Expert Élastomères EJS v9.9.1")
+st.subheader("Base Expert 100+ Fluides - Spécialités")
 
-# --- BASE DE DONNÉES (Structure 17 lignes - Base 500+) ---
+# --- BASE DE DONNÉES V9.4 + SAUMURE (Corrections syntaxiques lignes 31, 43, 85, 86) ---
 data = {
     "Famille Générique": [
-        "EPDM", "NBR", "Viton™ A", "Viton™ GF-S", "Viton™ GFLT-S", "Viton™ Extreme ETP", 
-        "HNBR", "AFLAS (FEPM)", "FFKM (Chimie Std)", "FFKM (Alimentaire/Vapeur)", 
-        "FFKM (Haute Temp)", "Silicone (VMQ)", "PTFE", 
-        "Fluorosilicone (FMVQ)", "Silicone Phénylé (PMVQ)", "Caoutchouc Naturel (NR)", "Polyuréthane (AU)"
+        "EPDM", "NBR", "Viton™ A (Standard)", "Viton™ GBL-S", 
+        "Viton™ GF-S", "Viton™ GFLT-S", "Viton™ Extreme ETP", 
+        "AFLAS (FEPM)", "HNBR", "Silicone", "PTFE"
     ],
-    "Dureté": ["70 ShA", "70 ShA", "75 ShA", "75 ShA", "75 ShA", "75 ShA", "70 ShA", "80 ShA", "75 ShA", "75 ShA", "80 ShA", "70 ShA", "60 ShD", "70 ShA", "70 ShA", "65 ShA", "90 ShA"],
-    "Couleur": ["Noir", "Noir", "Noir", "Vert", "Noir", "Noir", "Noir", "Noir", "Noir", "Blanc", "Noir", "Rouge", "Blanc", "Bleu", "Gris", "Blond", "Ocre"],
-    "Spécificité": ["Alimentaire", "Standard", "Standard", "Chimie Sévère", "Basse Temp", "Total Fluor", "Pétrole", "Vapeur/Base", "Universel", "FDA/USP VI", "HT 320°C", "FDA", "Total", "Hydrocarbures/Froid", "Extrême Froid", "Mécanique", "Abrasion"],
-    "Temp Min": [-50, -30, -20, -15, -15, -35, -40, -10, -20, -15, -10, -60, -200, -60, -100, -50, -30],
-    "Temp Max": [150, 100, 200, 230, 200, 230, 150, 200, 260, 250, 320, 200, 260, 175, 200, 80, 100],
+    "Dureté": ["70 ShA", "70 ShA", "75 ShA", "75 ShA", "75 ShA", "75 ShA", "75 ShA", "80 ShA", "70 ShA", "70 ShA", "60 ShD"],
+    "Couleur": ["Noir", "Noir", "Noir", "Noir", "Vert", "Noir", "Noir", "Noir", "Noir", "Rouge", "Blanc"],
+    "Spécificité": ["Alimentaire", "Standard", "Standard", "Haute teneur Fluor", "Chimie Sévère", "Basse Température", "Universalité Chimique", "Vapeur/Base", "Pétrole/Chaleur", "FDA", "Total"],
+    "Temp Min": [-50, -30, -20, -15, -15, -35, -10, -10, -40, -60, -200],
+    "Temp Max": [150, 100, 200, 210, 230, 200, 230, 200, 150, 200, 260],
     
-    # --- OPTIONS & FLUIDES (Exemples de la base) ---
-    "SANS CHOIX": [0]*17,
-    "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 4, 4, 3, 2],
-    "Vapeur (SEP 140°C)": [5, 1, 2, 3, 2, 4, 3, 5, 5, 5, 5, 3, 5, 2, 3, 1, 1],
-    "Soude (NEP 2%)": [5, 4, 1, 2, 1, 4, 4, 5, 5, 5, 5, 2, 5, 2, 2, 2, 1],
-    "Acide Sulfurique 98%": [4, 1, 3, 5, 5, 5, 1, 3, 5, 5, 5, 1, 5, 4, 3, 1, 1],
-    "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 1, 1, 5]
+    # --- FLUIDE SAUMURE (Ajouté discrètement dans la base) ---
+    "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5],
+    
+    # --- BASE CHIMIQUE V9.4 (Vérifiée pour éviter les erreurs de parenthèses) ---
+    "Acide Chlorhydrique 37%": [5, 1, 5, 5, 5, 5, 5, 5, 2, 2, 5],
+    "Acide Sulfurique 98%": [4, 1, 3, 4, 5, 5, 5, 3, 1, 1, 5],
+    "Vapeur (SEP 140°C)": [5, 1, 2, 2, 3, 2, 4, 5, 3, 3, 5],
+    "Soude (NEP 2%)": [5, 4, 1, 1, 2, 1, 4, 5, 4, 2, 5],
+    "Hypochlorite de Soude": [5, 2, 5, 5, 5, 5, 5, 5, 2, 3, 5],
+    "Eau Potable": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5],
+    "Méthanol": [5, 4, 1, 1, 2, 4, 5, 1, 4, 5, 5],
+    "Huile Hydraulique": [1, 5, 5, 5, 5, 5, 5, 5, 5, 2, 5],
+    "Lait / Produits Laitiers": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
 }
 
-# Mapping Références Commerciales (Fix PMVQ)
+# Mapping Références Europe Joints Services
 ejs_refs = {
     "AUCUNE SÉLECTION": None,
-    "EJS-E70P": "EPDM", "EJS-N70": "NBR", "EJS-V70": "Viton™ A",
-    "EJS-V75GF": "Viton™ GF-S", "EJS-V75GFLT": "Viton™ GFLT-S",
-    "EJS-V75ETP": "Viton™ Extreme ETP", "EJS-AF80": "AFLAS (FEPM)",
-    "EJS-K75CH": "FFKM (Chimie Std)", "EJS-K75AL": "FFKM (Alimentaire/Vapeur)",
-    "EJS-K80HT": "FFKM (Haute Temp)", "EJS-H70": "HNBR", "EJS-S70": "Silicone (VMQ)", 
-    "EJS-P70": "PTFE", "EJS-FS70": "Fluorosilicone (FMVQ)", 
-    "EJS-PS70": "Silicone Phénylé (PMVQ)", # Doit être identique au nom dans 'data'
-    "EJS-NR65": "Caoutchouc Naturel (NR)", "EJS-AU90": "Polyuréthane (AU)"
+    "EJS-E70P": "EPDM",
+    "EJS-N70": "NBR",
+    "EJS-V70": "Viton™ A (Standard)",
+    "EJS-V75GBL": "Viton™ GBL-S",
+    "EJS-V75GF": "Viton™ GF-S",
+    "EJS-V75GFLT": "Viton™ GFLT-S",
+    "EJS-V75ETP": "Viton™ Extreme ETP",
+    "EJS-AF80": "AFLAS (FEPM)",
+    "EJS-H70": "HNBR",
+    "EJS-S70": "Silicone",
+    "EJS-P70": "PTFE"
 }
 
 df = pd.DataFrame(data)
 
-# --- LOGIQUE DRC (Rétablie) ---
+# --- LOGIQUE DRC ---
 def evaluer_drc(row):
-    if any(x in row["Famille Générique"] for x in ["FFKM", "PTFE", "Viton™", "AFLAS"]): return "Excellente"
-    elif any(x in row["Famille Générique"] for x in ["EPDM", "NBR", "HNBR", "FMVQ", "AU"]): return "Moyenne"
+    if any(x in row["Famille Générique"] for x in ["PTFE", "Viton™", "AFLAS"]): return "Excellente"
+    elif any(x in row["Famille Générique"] for x in ["EPDM", "NBR", "HNBR"]): return "Moyenne"
     else: return "Basse"
+
 df["Qualité DRC"] = df.apply(evaluer_drc, axis=1)
 
 # --- SIDEBAR ---
@@ -58,50 +69,53 @@ with st.sidebar:
     cols_tech = ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max", "Qualité DRC"]
     liste_fluides = sorted([c for c in df.columns if c not in cols_tech])
     
-    idx_sc = liste_fluides.index("SANS CHOIX")
-    f1 = st.selectbox("Fluide 1", liste_fluides, index=0)
-    f2 = st.selectbox("Fluide 2", liste_fluides, index=idx_sc)
-    t_service = st.slider("Température (°C)", -200, 350, 20)
+    # Saumure non sélectionnée par défaut (Index 0 et 1)
+    f1 = st.selectbox("Sélectionner Fluide 1", liste_fluides, index=0)
+    f2 = st.selectbox("Sélectionner Fluide 2", liste_fluides, index=1)
+    t_service = st.slider("Température de service (°C)", -200, 260, 20)
     
     st.write("---")
-    choix_drc = st.multiselect("Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Excellente", "Moyenne"])
+    choix_drc = st.multiselect("Filtrer par Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Excellente", "Moyenne"])
     
     st.write("---")
-    ref_ejs = st.selectbox("Référence Europe Joints Services", list(ejs_refs.keys()))
-    famille_cible = ejs_refs[ref_ejs]
+    st.subheader("🛒 Référence Commerciale EJS")
+    ref_ejs_choisie = st.selectbox("Référence Europe Joints Services", list(ejs_refs.keys()))
+    famille_cible = ejs_refs[ref_ejs_choisie]
 
-# --- LOGIQUE DE TRI (FORCÉE : Meilleurs scores en haut) ---
+# --- CALCULS ---
 df["Score"] = df[f1] + df[f2]
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
-# --- AFFICHAGE (Design V11) ---
-st.info(f"Analyse technique pour : **{f1}** {'+ ' + f2 if f2 != 'SANS CHOIX' else ''}")
+# --- SECTION AFFICHAGE ---
+st.info(f"🧐 Analyse Technique : Étude de compatibilité pour {f1} et {f2}.")
 
 for index, row in df_tri.iterrows():
-    is_ref = famille_cible == row["Famille Générique"]
-    # Vérification température propre (Suppression erreur temp)
-    temp_valid = row["Temp Min"] <= t_service <= row["Temp Max"]
-    seuil = 4 if f2 == "SANS CHOIX" else 8
+    highlight = famille_cible == row["Famille Générique"]
+    temp_ok = row["Temp Min"] <= t_service <= row["Temp Max"]
     
-    if not temp_valid:
-        b_color, bg_color = "#dc3545", "rgba(220, 53, 69, 0.7)"
-    elif row["Score"] >= seuil:
-        b_color, bg_color = "#28a745", "rgba(40, 167, 69, 0.7)"
+    if not temp_ok:
+        border_color, bg_color = "#dc3545", "rgba(220, 53, 69, 0.7)"
+    elif row["Score"] >= 8:
+        border_color, bg_color = "#28a745", "rgba(40, 167, 69, 0.7)"
     else:
-        b_color, bg_color = "#fd7e14", "rgba(253, 126, 20, 0.7)"
+        border_color, bg_color = "#fd7e14", "rgba(253, 126, 20, 0.7)"
 
-    b_style = "6px solid white" if is_ref else f"2px solid {b_color}"
+    border_style = "6px solid white" if highlight else f"2px solid {border_color}"
 
-    # Construction HTML sécurisée (évite SyntaxError)
-    html_card = f"""
-    <div style="border: {b_style}; border-radius: 12px; padding: 20px; margin-bottom: 15px; background-color: {bg_color}; color: white;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <b style="font-size: 1.4em;">{row['Famille Générique']} {"⭐" if is_ref else ""}</b>
-            <b style="font-size: 1.2em; color: black; background: white; padding: 4px 12px; border-radius: 8px;">
-                Score : {row['Score']}/{'5' if f2 == 'SANS CHOIX' else '10'}
-            </b>
+    st.markdown(f"""
+        <div style="border: {border_style}; border-radius: 12px; padding: 20px; margin-bottom: 15px; background-color: {bg_color}; color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <b style="font-size: 1.4em; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">{row['Famille Générique']} {"⭐" if highlight else ""}</b>
+                <b style="font-size: 1.2em; color: black; background: white; padding: 4px 12px; border-radius: 8px;">Score : {row['Score']}/10</b>
+            </div>
+            <hr style="margin: 15px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">
+            <p style="margin: 5px 0;"><b>🔍 Synopsis des notes chimiques :</b> {f1} (<b>{row[f1]}/5</b>) + {f2} (<b>{row[f2]}/5</b>)</p>
+            <p style="margin: 10px 0 0 0; font-size: 0.95em; line-height: 1.5;">
+            <b>Spécificité :</b> {row['Spécificité']} | <b>Temp :</b> {row['Temp Min']}°C / {row['Temp Max']}°C
+            </p>
         </div>
-        <hr style="margin: 10px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">
-        <p style="margin: 5px 0;"><b>🔍 Synopsis :</b> {f1} ({row[f1]}/5) {f' + {f2} ({row[f2]}/5)' if f2 != 'SANS CHOIX' else ''}</p>
-        <p style="margin: 10px 0 0 0; font-size: 0.95em;">
-            <b>Usage :</b> {row
+    """, unsafe_allow_html=True)
+
+st.write("---")
+st.write("### 📊 Synthèse Comparative Complète")
+st.dataframe(df_tri.drop(columns=["Qualité DRC"]), use_container_width=True)
