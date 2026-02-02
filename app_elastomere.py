@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration de l'interface
+# 1. Configuration
 st.set_page_config(page_title="Expert Sélecteur EJS", layout="wide")
 
 st.title("🧪 Expert Sélecteur EJS")
-st.subheader("Classement par Performance : Du meilleur au moins bon")
+st.subheader("Classement Automatique par Performance (Meilleurs en haut)")
 
 # --- BASE DE DONNÉES (Structure stable 17 lignes) ---
 data = {
@@ -21,12 +21,13 @@ data = {
     "Temp Min": [-50, -30, -20, -15, -15, -35, -40, -10, -20, -15, -10, -60, -200, -60, -100, -50, -30],
     "Temp Max": [150, 100, 200, 230, 200, 230, 150, 200, 260, 250, 320, 200, 260, 175, 200, 80, 100],
     
-    # --- FLUIDES ---
+    # --- FLUIDES (Exemples de la base) ---
     "SANS CHOIX": [0]*17,
     "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 4, 4, 3, 2],
     "Vapeur (SEP 140°C)": [5, 1, 2, 3, 2, 4, 3, 5, 5, 5, 5, 3, 5, 2, 3, 1, 1],
     "Soude (NEP 2%)": [5, 4, 1, 2, 1, 4, 4, 5, 5, 5, 5, 2, 5, 2, 2, 2, 1],
-    "Acide Sulfurique 98%": [4, 1, 3, 5, 5, 5, 1, 3, 5, 5, 5, 1, 5, 4, 3, 1, 1]
+    "Acide Sulfurique 98%": [4, 1, 3, 5, 5, 5, 1, 3, 5, 5, 5, 1, 5, 4, 3, 1, 1],
+    "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 1, 1, 5]
 }
 
 # Mapping commercial (Correction PMVQ)
@@ -47,7 +48,8 @@ df = pd.DataFrame(data)
 # --- SIDEBAR ---
 with st.sidebar:
     st.header("⚙️ Configuration")
-    fluides = sorted([c for c in df.columns if c not in ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max"]])
+    cols_tech = ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max"]
+    fluides = sorted([c for c in df.columns if c not in cols_tech])
     
     f1 = st.selectbox("Fluide 1", fluides, index=0)
     f2 = st.selectbox("Fluide 2", fluides, index=fluides.index("SANS CHOIX"))
@@ -56,9 +58,10 @@ with st.sidebar:
     ref_ejs = st.selectbox("Référence EJS", list(ejs_refs.keys()))
     famille_cible = ejs_refs[ref_ejs]
 
-# --- CALCUL ET CLASSEMENT (IMPORTANT) ---
+# --- LOGIQUE DE TRI CRUCIAL ---
+# Calcul du score combiné
 df["Score"] = df[f1] + df[f2]
-# On force le tri décroissant ici pour avoir les fiches VERTES en haut
+# Tri du DataFrame : les meilleurs scores (en haut)
 df_tri = df.sort_values(by="Score", ascending=False)
 
 # --- AFFICHAGE ---
@@ -66,7 +69,7 @@ st.info(f"Analyse pour: {f1} {'+ ' + f2 if f2 != 'SANS CHOIX' else ''}")
 
 for _, row in df_tri.iterrows():
     is_ref = famille_cible == row["Famille Générique"]
-    # Suppression de l'erreur NameError 'temp'
+    # Vérification température propre (Supprime NameError: temp)
     temp_ok = row["Temp Min"] <= t_serv <= row["Temp Max"]
     seuil_v = 4 if f2 == "SANS CHOIX" else 8
     
@@ -79,11 +82,11 @@ for _, row in df_tri.iterrows():
 
     border = "6px solid white" if is_ref else "none"
 
-    # Construction HTML sécurisée par morceaux (évite SyntaxError)
+    # Construction HTML sécurisée (évite SyntaxError)
     card = '<div style="background-color:' + bg + '; border:' + border + '; border-radius:10px; padding:15px; margin-bottom:10px; color:white;">'
-    card += '<div style="display: flex; justify-content: space-between;">'
-    card += '<b>' + row["Famille Générique"] + (' (Référence ⭐)' if is_ref else '') + '</b>'
-    card += '<span style="background:white; color:black; padding:2px 8px; border-radius:5px;">'
+    card += '<div style="display: flex; justify-content: space-between; align-items: center;">'
+    card += '<b>' + row["Famille Générique"] + (' (Ref ⭐)' if is_ref else '') + '</b>'
+    card += '<span style="background:white; color:black; padding:2px 8px; border-radius:5px; font-weight: bold;">'
     card += 'Score: ' + str(row["Score"]) + ('/5' if f2 == "SANS CHOIX" else '/10') + '</span></div>'
     card += '<hr style="margin:8px 0; border:0; border-top:1px solid white; opacity:0.3;">'
     card += '<small>' + row["Spécificité"] + ' | ' + str(row["Temp Min"]) + '°C à ' + str(row["Temp Max"]) + '°C</small></div>'
