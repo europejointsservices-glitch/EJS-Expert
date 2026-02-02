@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration de l'interface (Mode large pour PC et Mobile)
-st.set_page_config(page_title="EJS Expert v6.8", layout="wide")
+# 1. Configuration (Mode large v5.6)
+st.set_page_config(page_title="EJS Expert v6.9", layout="wide")
 
-st.title("🧪 Expert Élastomères EJS v6.8")
+st.title("🧪 Expert Élastomères EJS v6.9")
 st.subheader("Analyse Technique & Synopsis des Performances")
 
 # --- BASE DE DONNÉES (Strictement inchangée) ---
@@ -50,14 +50,9 @@ df["Score"] = df[f1] + df[f2]
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
 # --- SYNOPSIS DE L'ANALYSE ---
-st.info(f"🧐 **Synopsis de l'Expert :** L'analyse porte sur le mélange **{f1}** et **{f2}**. Les notes sont attribuées de 1 (Incompatible) à 5 (Optimale). Un score de 10/10 représente une sécurité totale pour Europe Joints Services.")
+st.info(f"🧐 **Synopsis de l'Expert :** Analyse du mélange **{f1}** et **{f2}**. Notes de 1 (Incompatible) à 5 (Optimale).")
 
-# --- AFFICHAGE DU TABLEAU GÉNÉRAL ---
-st.write("### 📊 Synthèse Comparative")
-st.dataframe(df_tri.drop(columns=["Qualité DRC"]), use_container_width=True)
-
-# --- AFFICHAGE DES FICHES DÉTAILLÉES ---
-st.write("---")
+# --- SECTION 1 : FICHES DÉTAILLÉES (PRIORITÉ) ---
 st.write("### 📑 Détail des Notes et Synopsis par Matériau")
 
 for index, row in df_tri.iterrows():
@@ -72,7 +67,7 @@ for index, row in df_tri.iterrows():
                 <b style="font-size: 1.2em; color: {color};">Score : {row['Score']}/10</b>
             </div>
             <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
-            <p style="margin: 5px 0;"><b>🔍 Synopsis des notes chimiques :</b></p>
+            <p style="margin: 5px 0;"><b>🔍 Notes individuelles :</b></p>
             <ul style="margin: 5px 0; font-size: 0.95em;">
                 <li>{f1} : <b>{row[f1]}/5</b></li>
                 <li>{f2} : <b>{row[f2]}/5</b></li>
@@ -83,3 +78,8 @@ for index, row in df_tri.iterrows():
             </p>
         </div>
     """, unsafe_allow_html=True)
+
+# --- SECTION 2 : TABLEAU RÉCAPITULATIF (EN BAS) ---
+st.write("---")
+st.write("### 📊 Synthèse Comparative Complète")
+st.dataframe(df_tri.drop(columns=["Qualité DRC"]), use_container_width=True)
