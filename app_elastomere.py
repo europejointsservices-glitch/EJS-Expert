@@ -7,7 +7,7 @@ st.set_page_config(page_title="Expert Élastomères EJS v5.6", layout="wide")
 st.title("🧪 Expert Élastomères EJS v5.6")
 st.subheader("Sélection par Performance Technique")
 
-# --- BASE DE DONNÉES (Structure exacte v5.6) ---
+# --- BASE DE DONNÉES (Strictement identique à votre première version) ---
 data = {
     "Compound EJS": ["EJS-E70P", "EJS-N70", "EJS-V70ETP", "EJS-S70", "EJS-P70"],
     "Famille": ["EPDM", "NBR", "FKM", "Silicone", "PTFE"],
@@ -25,7 +25,7 @@ data = {
 df = pd.DataFrame(data)
 fluides = [c for c in df.columns if c not in ["Compound EJS", "Famille", "Dureté", "Couleur", "Norme", "Temp Min", "Temp Max"]]
 
-# --- SIDEBAR ---
+# --- SIDEBAR (PARAMÈTRES) ---
 with st.sidebar:
     st.header("⚙️ Paramètres")
     f1 = st.selectbox("Sélectionner Fluide 1", fluides)
@@ -36,40 +36,34 @@ with st.sidebar:
 df["Score"] = df[f1] + df[f2]
 df_tri = df.sort_values(by="Score", ascending=False)
 
-# --- AFFICHAGE PAR COLONNES (Le visuel de la 1ère publication) ---
-st.write(f"### Expertise pour : {f1} + {f2}")
-
-# On utilise st.columns pour l'affichage côte à côte
-cols = st.columns(len(df_tri))
-
-for i, (index, row) in enumerate(df_tri.iterrows()):
-    with cols[i]:
-        # Logique de couleur des bordures
-        temp_ok = row["Temp Min"] <= t_service <= row["Temp Max"]
-        if not temp_ok:
-            color = "red"
-        elif row["Score"] >= 8:
-            color = "green"
-        else:
-            color = "orange"
-        
-        # Le container avec la bordure de couleur
-        with st.container():
-            st.markdown(f"""
-                <div style="border: 3px solid {color}; border-radius: 10px; padding: 10px; background-color: white;">
-                    <h3 style="text-align: center; color: black;">{row['Compound EJS']}</h3>
-                    <p style="text-align: center; color: black;"><b>{row['Famille']}</b></p>
-                    <hr>
-                    <p style="color: black;"><b>Score : {row['Score']}/10</b></p>
-                    <p style="color: black; font-size: 0.8em;">Dureté : {row['Dureté']}<br>
-                    Couleur : {row['Couleur']}<br>
-                    Norme : {row['Norme']}</p>
-                    <p style="color: black; font-size: 0.8em; font-style: italic;">
-                    Limites : {row['Temp Min']}°C / {row['Temp Max']}°C</p>
-                </div>
-            """, unsafe_allow_html=True)
-
-# --- TABLEAU RÉCAPITULATIF (En bas de page) ---
-st.write("---")
-st.write("### 📊 Tableau de synthèse complet")
+# --- AFFICHAGE DU TABLEAU DE SYNTHÈSE (C'était le coeur de la v5.6) ---
+st.write(f"### 📊 Synthèse Comparative : {f1} + {f2}")
 st.dataframe(df_tri)
+
+st.write("---")
+
+# --- AFFICHAGE DES FICHES DRC (Structure v5.6 d'origine) ---
+st.write("### 📑 Détails Techniques et DRC")
+
+for index, row in df_tri.iterrows():
+    temp_ok = row["Temp Min"] <= t_service <= row["Temp Max"]
+    
+    # Détermination du statut visuel
+    if not temp_ok:
+        status_color = "🔴"
+        status_text = "HORS TEMPÉRATURE"
+    elif row["Score"] >= 8:
+        status_color = "🟢"
+        status_text = "RECOMMANDÉ"
+    else:
+        status_color = "🟠"
+        status_text = "VIGILANCE / USAGE STATIQUE"
+
+    # Affichage en bloc simple et propre (lisible partout)
+    with st.expander(f"{status_color} {row['Compound EJS']} - Score : {row['Score']}/10"):
+        st.write(f"**Matière :** {row['Famille']}")
+        st.write(f"**Dureté :** {row['Dureté']} | **Couleur :** {row['Couleur']}")
+        st.write(f"**Norme :** {row['Norme']}")
+        st.write(f"**Résistance chimique :** {f1} ({row[f1]}/5) + {f2} ({row[f2]}/5)")
+        st.write(f"**Plage Température :** {row['Temp Min']}°C à {row['Temp Max']}°C")
+        st.write(f"**Statut :** {status_text}")
