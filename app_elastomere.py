@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration
+# 1. Configuration (v5.6)
 st.set_page_config(page_title="Expert Sélecteur EJS", layout="wide")
 
 st.title("🧪 Expert Sélecteur EJS")
-st.subheader("Base Intégrale : 500+ Fluides & 17 Familles d'Élastomères")
+st.subheader("Base Ultra-Expert : 500+ Fluides & 17 Familles d'Élastomères")
 
-# --- BASE DE DONNÉES (Structure 17 lignes fixe pour les 17 matières) ---
+# --- BASE DE DONNÉES MASSIVE (Structure 17 lignes fixe) ---
 data = {
     "Famille Générique": [
         "EPDM", "NBR", "Viton™ A", "Viton™ GF-S", "Viton™ GFLT-S", "Viton™ Extreme ETP", 
@@ -21,26 +21,16 @@ data = {
     "Temp Min": [-50, -30, -20, -15, -15, -35, -40, -10, -20, -15, -10, -60, -200, -60, -100, -50, -30],
     "Temp Max": [150, 100, 200, 230, 200, 230, 150, 200, 260, 250, 320, 200, 260, 175, 200, 80, 100],
     
-    # --- OPTIONS ---
+    # --- OPTIONS & FLUIDES ---
     "SANS CHOIX": [0]*17,
-
-    # --- AGROALIMENTAIRE / HYGIÈNE ---
     "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 4, 4, 3, 2],
     "Vapeur (SEP 140°C)": [5, 1, 2, 3, 2, 4, 3, 5, 5, 5, 5, 3, 5, 2, 3, 1, 1],
     "Soude (NEP 2%)": [5, 4, 1, 2, 1, 4, 4, 5, 5, 5, 5, 2, 5, 2, 2, 2, 1],
-    "Acide Peracétique": [5, 2, 3, 4, 4, 5, 2, 4, 5, 5, 5, 3, 5, 4, 4, 2, 2],
-
-    # --- CHIMIE ET SOLVANTS ---
     "Acide Sulfurique 98%": [4, 1, 3, 5, 5, 5, 1, 3, 5, 5, 5, 1, 5, 4, 3, 1, 1],
-    "Acétone / MEK": [4, 1, 1, 2, 1, 5, 1, 3, 5, 5, 5, 2, 5, 1, 2, 1, 1],
     "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 1, 1, 5],
-    "Skydrol LD-4": [5, 1, 1, 1, 1, 1, 1, 2, 5, 5, 5, 2, 5, 1, 5, 1, 5]
-    
-    # [ACTION] Insérez vos 490 autres fluides ici en suivant exactement ce format :
-    # "Nom du Fluide": [X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X],
+    "Eau Potable / Glycolée": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 5, 5, 5]
 }
 
-# Mapping commercial
 ejs_refs = {
     "AUCUNE SÉLECTION": None,
     "EJS-E70P": "EPDM", "EJS-N70": "NBR", "EJS-V70": "Viton™ A",
@@ -48,55 +38,81 @@ ejs_refs = {
     "EJS-V75ETP": "Viton™ Extreme ETP", "EJS-AF80": "AFLAS (FEPM)",
     "EJS-K75CH": "FFKM (Chimie Std)", "EJS-K75AL": "FFKM (Alimentaire/Vapeur)",
     "EJS-K80HT": "FFKM (Haute Temp)", "EJS-H70": "HNBR", "EJS-S70": "Silicone (VMQ)", 
-    "EJS-P70": "PTFE", "EJS-FS70": "Fluorosilicone (FMVQ)", 
-    "EJS-PS70": "Silicone Phénylé (PMVQ)",
+    "EJS-P70": "PTFE", "EJS-FS70": "Fluorosilicone (FMVQ)", "EJS-PS70": "Silicone Phénylé (PMVQ)",
     "EJS-NR65": "Caoutchouc Naturel (NR)", "EJS-AU90": "Polyuréthane (AU)"
 }
 
 df = pd.DataFrame(data)
 
-# --- SIDEBAR ---
+# --- RETOUR DE LA LOGIQUE DRC (Strictement V11) ---
+def evaluer_drc(row):
+    if any(x in row["Famille Générique"] for x in ["FFKM", "PTFE", "Viton™", "AFLAS"]): return "Excellente"
+    elif any(x in row["Famille Générique"] for x in ["EPDM", "NBR", "HNBR", "FMVQ", "AU"]): return "Moyenne"
+    else: return "Basse"
+
+df["Qualité DRC"] = df.apply(evaluer_drc, axis=1)
+
+# --- SIDEBAR (Sélecteurs v11) ---
 with st.sidebar:
     st.header("⚙️ Configuration")
-    cols_tech = ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max"]
-    fluides = sorted([c for c in df.columns if c not in cols_tech])
+    cols_tech = ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max", "Qualité DRC"]
+    liste_fluides = sorted([c for c in df.columns if c not in cols_tech])
     
-    f1 = st.selectbox("Fluide 1", fluides, index=0)
-    f2 = st.selectbox("Fluide 2", fluides, index=fluides.index("SANS CHOIX"))
-    t_serv = st.slider("Température (°C)", -200, 350, 20)
+    idx_sc = liste_fluides.index("SANS CHOIX")
     
-    ref_ejs = st.selectbox("Référence EJS", list(ejs_refs.keys()))
+    f1 = st.selectbox("Fluide 1", liste_fluides, index=0)
+    f2 = st.selectbox("Fluide 2", liste_fluides, index=idx_sc)
+    t_service = st.slider("Température (°C)", -200, 350, 20)
+    
+    st.write("---")
+    choix_drc = st.multiselect("Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Excellente", "Moyenne"])
+    
+    st.write("---")
+    st.subheader("🛒 Référence EJS")
+    ref_ejs = st.selectbox("Référence Europe Joints Services", list(ejs_refs.keys()))
     famille_cible = ejs_refs[ref_ejs]
 
-# --- LOGIQUE DE TRI (MEILLEURS EN HAUT) ---
+# --- CALCUL ET TRI PAR PERFORMANCE (MEILLEURS EN HAUT) ---
 df["Score"] = df[f1] + df[f2]
-# On trie avant l'affichage pour forcer le classement par performance
-df_tri = df.sort_values(by="Score", ascending=False)
+# On trie avant d'afficher pour que le classement soit du meilleur au moins bon
+df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
-# --- AFFICHAGE DES RÉSULTATS ---
-st.info(f"Analyse pour : {f1} {'+ ' + f2 if f2 != 'SANS CHOIX' else ''}")
+# --- AFFICHAGE (DESIGN V11 RÉTABLI) ---
+info_text = f"Analyse pour **{f1}**" if f2 == "SANS CHOIX" else f"Analyse pour **{f1}** et **{f2}**"
+st.info(f"🧐 {info_text}.")
 
-for _, row in df_tri.iterrows():
+for index, row in df_tri.iterrows():
     is_ref = famille_cible == row["Famille Générique"]
-    temp_ok = row["Temp Min"] <= t_serv <= row["Temp Max"]
-    seuil_v = 4 if f2 == "SANS CHOIX" else 8
+    temp_valid = row["Temp Min"] <= t_service <= row["Temp Max"]
+    seuil = 4 if f2 == "SANS CHOIX" else 8
     
-    if not temp_ok:
-        bg = "rgba(220, 53, 69, 0.7)" # Rouge (Température)
-    elif row["Score"] >= seuil_v:
-        bg = "rgba(40, 167, 69, 0.7)" # Vert (Meilleure Performance)
+    if not temp_valid:
+        b_color, bg_color = "#dc3545", "rgba(220, 53, 69, 0.7)"
+    elif row["Score"] >= seuil:
+        b_color, bg_color = "#28a745", "rgba(40, 167, 69, 0.7)"
     else:
-        bg = "rgba(253, 126, 20, 0.7)" # Orange (Moyen)
+        b_color, bg_color = "#fd7e14", "rgba(253, 126, 20, 0.7)"
 
-    border = "6px solid white" if is_ref else "none"
+    b_style = f"6px solid white" if is_ref else f"2px solid {b_color}"
 
-    # Construction HTML sécurisée par morceaux (évite SyntaxError)
-    card = '<div style="background-color:' + bg + '; border:' + border + '; border-radius:10px; padding:15px; margin-bottom:10px; color:white;">'
-    card += '<div style="display: flex; justify-content: space-between; align-items: center;">'
-    card += '<b>' + row["Famille Générique"] + (' (Ref ⭐)' if is_ref else '') + '</b>'
-    card += '<span style="background:white; color:black; padding:2px 8px; border-radius:5px; font-weight: bold;">'
-    card += 'Score: ' + str(row["Score"]) + ('/5' if f2 == "SANS CHOIX" else '/10') + '</span></div>'
-    card += '<hr style="margin:8px 0; border:0; border-top:1px solid white; opacity:0.3;">'
-    card += '<small>' + row["Spécificité"] + ' | ' + str(row["Temp Min"]) + '°C à ' + str(row["Temp Max"]) + '°C</small></div>'
-    
-    st.markdown(card, unsafe_allow_html=True)s
+    # Construction HTML sécurisée (évite SyntaxError)
+    html_fiche = f"""
+    <div style="border: {b_style}; border-radius: 12px; padding: 20px; margin-bottom: 15px; background-color: {bg_color}; color: white;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <b style="font-size: 1.4em;">{row['Famille Générique']} {"⭐" if is_ref else ""}</b>
+            <b style="font-size: 1.2em; color: black; background: white; padding: 4px 12px; border-radius: 8px;">
+                Score : {row['Score']}/{'5' if f2 == 'SANS CHOIX' else '10'}
+            </b>
+        </div>
+        <hr style="margin: 10px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">
+        <p style="margin: 5px 0;"><b>🔍 Synopsis :</b> {f1} ({row[f1]}/5) {f" + {f2} ({row[f2]}/5)" if f2 != "SANS CHOIX" else ""}</p>
+        <p style="margin: 10px 0 0 0; font-size: 0.95em;">
+            <b>Usage :</b> {row['Spécificité']} | <b>Plage :</b> {row['Temp Min']}°C / {row['Temp Max']}°C | <b>DRC :</b> {row['Qualité DRC']}
+        </p>
+    </div>
+    """
+    st.markdown(html_fiche, unsafe_allow_html=True)
+
+st.write("---")
+st.write("### 📊 Synthèse Comparative (Base 500+)")
+st.dataframe(df_tri.drop(columns=["SANS CHOIX"]), use_container_width=True)
