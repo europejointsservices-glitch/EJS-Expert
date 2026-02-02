@@ -5,7 +5,7 @@ import pandas as pd
 st.set_page_config(page_title="Expert Sélecteur EJS", layout="wide")
 
 st.title("🧪 Expert Sélecteur EJS")
-st.subheader("Classement par Performance Chimique (Meilleurs en haut)")
+st.subheader("Classement par Performance : Du meilleur au moins bon")
 
 # --- BASE DE DONNÉES (Structure stable 17 lignes) ---
 data = {
@@ -29,7 +29,7 @@ data = {
     "Acide Sulfurique 98%": [4, 1, 3, 5, 5, 5, 1, 3, 5, 5, 5, 1, 5, 4, 3, 1, 1]
 }
 
-# Mapping commercial
+# Mapping commercial (Correction PMVQ)
 ejs_refs = {
     "AUCUNE SÉLECTION": None,
     "EJS-E70P": "EPDM", "EJS-N70": "NBR", "EJS-V70": "Viton™ A",
@@ -56,9 +56,9 @@ with st.sidebar:
     ref_ejs = st.selectbox("Référence EJS", list(ejs_refs.keys()))
     famille_cible = ejs_refs[ref_ejs]
 
-# --- CALCUL ET TRI PAR SCORE (IMPORTANT) ---
+# --- CALCUL ET CLASSEMENT (IMPORTANT) ---
 df["Score"] = df[f1] + df[f2]
-# Tri par score décroissant pour mettre les meilleurs (VERTS) en premier
+# On force le tri décroissant ici pour avoir les fiches VERTES en haut
 df_tri = df.sort_values(by="Score", ascending=False)
 
 # --- AFFICHAGE ---
@@ -66,7 +66,7 @@ st.info(f"Analyse pour: {f1} {'+ ' + f2 if f2 != 'SANS CHOIX' else ''}")
 
 for _, row in df_tri.iterrows():
     is_ref = famille_cible == row["Famille Générique"]
-    # Suppression du NameError 'temp' par l'utilisation de t_serv
+    # Suppression de l'erreur NameError 'temp'
     temp_ok = row["Temp Min"] <= t_serv <= row["Temp Max"]
     seuil_v = 4 if f2 == "SANS CHOIX" else 8
     
@@ -79,5 +79,13 @@ for _, row in df_tri.iterrows():
 
     border = "6px solid white" if is_ref else "none"
 
-    # Construction HTML sécurisée (sans triple guillemets) pour éviter SyntaxError
-    html
+    # Construction HTML sécurisée par morceaux (évite SyntaxError)
+    card = '<div style="background-color:' + bg + '; border:' + border + '; border-radius:10px; padding:15px; margin-bottom:10px; color:white;">'
+    card += '<div style="display: flex; justify-content: space-between;">'
+    card += '<b>' + row["Famille Générique"] + (' (Référence ⭐)' if is_ref else '') + '</b>'
+    card += '<span style="background:white; color:black; padding:2px 8px; border-radius:5px;">'
+    card += 'Score: ' + str(row["Score"]) + ('/5' if f2 == "SANS CHOIX" else '/10') + '</span></div>'
+    card += '<hr style="margin:8px 0; border:0; border-top:1px solid white; opacity:0.3;">'
+    card += '<small>' + row["Spécificité"] + ' | ' + str(row["Temp Min"]) + '°C à ' + str(row["Temp Max"]) + '°C</small></div>'
+    
+    st.markdown(card, unsafe_allow_html=True)
