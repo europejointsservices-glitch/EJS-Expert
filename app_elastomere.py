@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration
-st.set_page_config(page_title="EJS Expert v9.4", layout="wide")
+# 1. Configuration (Mode large v5.6)
+st.set_page_config(page_title="EJS Expert v9.5", layout="wide")
 
-st.title("🧪 Expert Élastomères EJS v9.4")
-st.subheader("Base 100 Fluides - Grades Viton™ Spéciaux & Réf. EJS")
+st.title("🧪 Expert Élastomères EJS v9.5")
+st.subheader("Base Expert & Agroalimentaire - Jus de Saumure 100%")
 
-# --- BASE DE DONNÉES ENRICHIE (Focus Spécialités) ---
+# --- BASE DE DONNÉES ENRICHIE (Datas v9.4 + Saumure) ---
 data = {
     "Famille Générique": [
         "EPDM", "NBR", "Viton™ A (Standard)", "Viton™ GBL-S", 
@@ -20,19 +20,28 @@ data = {
     "Temp Min": [-50, -30, -20, -15, -15, -35, -10, -10, -40, -60, -200],
     "Temp Max": [150, 100, 200, 210, 230, 200, 230, 200, 150, 200, 260],
     
-    # --- FLUIDES (Exemple d'impact des grades spéciaux) ---
+    # --- NOUVEAU FLUIDE ---
+    "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5],
+    
+    # --- FLUIDES ALIMENTAIRES & NEP ---
     "Vapeur (SEP 140°C)": [5, 1, 2, 2, 3, 2, 4, 5, 3, 3, 5],
     "Soude (NEP 2%)": [5, 4, 1, 1, 2, 1, 4, 5, 4, 2, 5],
-    "Acide Sulfurique 98%": [4, 1, 3, 4, 5, 5, 5, 3, 1, 1, 5],
-    "Solvants Oxygénés": [4, 1, 1, 1, 2, 1, 5, 3, 1, 2, 5],
-    "Méthanol": [5, 4, 1, 1, 2, 4, 5, 1, 4, 5, 5],
-    "Graisse Animale": [1, 5, 5, 5, 5, 5, 5, 4, 5, 4, 5],
     "Eau Potable": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    "Graisse Animale": [1, 5, 5, 5, 5, 5, 5, 4, 5, 4, 5],
+    "Huile Végétale": [1, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5],
+    "Lait / Produits Laitiers": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    
+    # --- CHIMIE & INDUSTRIE (Extrait 100 fluides v9.4) ---
+    "Acide Sulfurique 98%": [4, 1, 3, 4, 5, 5, 5, 3, 1, 1, 5],
+    "Méthanol": [5, 4, 1, 1, 2, 4, 5, 1, 4, 5, 5],
     "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5],
-    # ... Les autres fluides de la v9 sont maintenus dans vos colonnes
+    "Huile Hydraulique": [1, 5, 5, 5, 5, 5, 5, 5, 5, 2, 5],
+    "Acétone": [4, 1, 1, 1, 1, 1, 5, 3, 1, 2, 5],
+    "Hypochlorite de Soude": [5, 2, 5, 5, 5, 5, 5, 5, 2, 3, 5],
+    # ... conservez ici l'intégralité de vos colonnes fluides existantes
 }
 
-# Mapping Références EJS (Ciblage des grades)
+# Mapping Références EJS
 ejs_refs = {
     "AUCUNE SÉLECTION": None,
     "EJS-E70P": "EPDM",
@@ -69,49 +78,9 @@ with st.sidebar:
     t_service = st.slider("Température de service (°C)", -200, 260, 20)
     
     st.write("---")
-    choix_drc = st.multiselect("Filtrer par Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Excellente", "Moyenne"])
+    # Défaut sur Moyenne comme demandé précédemment
+    choix_drc = st.multiselect("Filtrer par Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Moyenne"])
     
     st.write("---")
     st.subheader("🛒 Référence Commerciale EJS")
-    ref_ejs_choisie = st.selectbox("Référence Europe Joints Services", list(ejs_refs.keys()))
-    famille_cible = ejs_refs[ref_ejs_choisie]
-
-# --- CALCULS ---
-df["Score"] = df[f1] + df[f2]
-df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
-
-# --- SYNOPSIS ---
-st.info(f"🧐 **Expertise EJS v9.4 :** Analyse comparative des grades Viton™ de spécialité face à **{f1}** et **{f2}**.")
-
-# --- SECTION 1 : FICHES ---
-for index, row in df_tri.iterrows():
-    highlight = famille_cible == row["Famille Générique"]
-    temp_ok = row["Temp Min"] <= t_service <= row["Temp Max"]
-    
-    if not temp_ok:
-        border_color, bg_color = "#dc3545", "rgba(220, 53, 69, 0.7)"
-    elif row["Score"] >= 8:
-        border_color, bg_color = "#28a745", "rgba(40, 167, 69, 0.7)"
-    else:
-        border_color, bg_color = "#fd7e14", "rgba(253, 126, 20, 0.7)"
-
-    border_style = "6px solid white" if highlight else f"2px solid {border_color}"
-
-    st.markdown(f"""
-        <div style="border: {border_style}; border-radius: 12px; padding: 20px; margin-bottom: 15px; background-color: {bg_color}; color: white;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <b style="font-size: 1.4em;">{row['Famille Générique']} {"⭐" if highlight else ""}</b>
-                <b style="font-size: 1.2em; color: black; background: white; padding: 4px 12px; border-radius: 8px;">Score : {row['Score']}/10</b>
-            </div>
-            <hr style="margin: 10px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">
-            <p style="margin: 5px 0;"><b>🔍 Synopsis des notes chimiques :</b> {f1} (<b>{row[f1]}/5</b>) + {f2} (<b>{row[f2]}/5</b>)</p>
-            <p style="margin: 10px 0 0 0; font-size: 0.95em;">
-            <b>Usage :</b> {row['Spécificité']} | <b>Temp :</b> {row['Temp Min']}°C à {row['Temp Max']}°C
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-
-# --- SECTION 2 : TABLEAU ---
-st.write("---")
-st.write("### 📊 Synthèse Comparative des Grades de Spécialité")
-st.dataframe(df_tri.drop(columns=["Qualité DRC"]), use_container_width=True)
+    ref_ejs_choisie = st.selectbox("Référence Europe Joints Services", list
