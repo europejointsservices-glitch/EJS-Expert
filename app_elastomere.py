@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
 
-# Configuration de la page
-st.set_page_config(page_title="Expert Élastomères EJS v5.6", layout="wide")
+# 1. Configuration (Retour au mode large v5.6)
+st.set_page_config(page_title="EJS Expert v6.5", layout="wide")
 
-st.title("🧪 Expert Élastomères EJS v5.6")
-st.subheader("Sélection par Performance Technique")
+st.title("🧪 Expert Élastomères EJS v6.5")
+st.subheader("Filtre DRC Dynamique & Performance")
 
-# --- BASE DE DONNÉES (Strictement identique à votre première version) ---
+# --- BASE DE DONNÉES (Strictement inchangée) ---
 data = {
     "Compound EJS": ["EJS-E70P", "EJS-N70", "EJS-V70ETP", "EJS-S70", "EJS-P70"],
     "Famille": ["EPDM", "NBR", "FKM", "Silicone", "PTFE"],
@@ -23,47 +23,21 @@ data = {
 }
 
 df = pd.DataFrame(data)
-fluides = [c for c in df.columns if c not in ["Compound EJS", "Famille", "Dureté", "Couleur", "Norme", "Temp Min", "Temp Max"]]
 
-# --- SIDEBAR (PARAMÈTRES) ---
+# --- LOGIQUE DE TRADUCTION DRC (Sans changer la base) ---
+# On définit ici ce qu'est une DRC excellente ou basse selon le composé
+def evaluer_drc(row):
+    if "PTFE" in row["Famille"] or "FKM" in row["Famille"]:
+        return "Excellente"
+    elif "EPDM" in row["Famille"] or "NBR" in row["Famille"]:
+        return "Moyenne"
+    else:
+        return "Basse"
+
+df["Qualité DRC"] = df.apply(evaluer_drc, axis=1)
+
+# --- SIDEBAR ---
 with st.sidebar:
     st.header("⚙️ Paramètres")
-    f1 = st.selectbox("Sélectionner Fluide 1", fluides)
-    f2 = st.selectbox("Sélectionner Fluide 2", fluides)
-    t_service = st.slider("Température de service (°C)", -200, 260, 20)
-
-# --- CALCUL ET TRI ---
-df["Score"] = df[f1] + df[f2]
-df_tri = df.sort_values(by="Score", ascending=False)
-
-# --- AFFICHAGE DU TABLEAU DE SYNTHÈSE (C'était le coeur de la v5.6) ---
-st.write(f"### 📊 Synthèse Comparative : {f1} + {f2}")
-st.dataframe(df_tri)
-
-st.write("---")
-
-# --- AFFICHAGE DES FICHES DRC (Structure v5.6 d'origine) ---
-st.write("### 📑 Détails Techniques et DRC")
-
-for index, row in df_tri.iterrows():
-    temp_ok = row["Temp Min"] <= t_service <= row["Temp Max"]
-    
-    # Détermination du statut visuel
-    if not temp_ok:
-        status_color = "🔴"
-        status_text = "HORS TEMPÉRATURE"
-    elif row["Score"] >= 8:
-        status_color = "🟢"
-        status_text = "RECOMMANDÉ"
-    else:
-        status_color = "🟠"
-        status_text = "VIGILANCE / USAGE STATIQUE"
-
-    # Affichage en bloc simple et propre (lisible partout)
-    with st.expander(f"{status_color} {row['Compound EJS']} - Score : {row['Score']}/10"):
-        st.write(f"**Matière :** {row['Famille']}")
-        st.write(f"**Dureté :** {row['Dureté']} | **Couleur :** {row['Couleur']}")
-        st.write(f"**Norme :** {row['Norme']}")
-        st.write(f"**Résistance chimique :** {f1} ({row[f1]}/5) + {f2} ({row[f2]}/5)")
-        st.write(f"**Plage Température :** {row['Temp Min']}°C à {row['Temp Max']}°C")
-        st.write(f"**Statut :** {status_text}")
+    f1 = st.selectbox("Sélectionner Fluide 1", [c for c in data if c not in ["Compound EJS", "Famille", "Dureté", "Couleur", "Norme", "Temp Min", "Temp Max"]])
+    f2 = st.selectbox("Sélectionner Fluide 2", [c for c in data if c not in ["Compound EJS", "Famille", "Dureté
