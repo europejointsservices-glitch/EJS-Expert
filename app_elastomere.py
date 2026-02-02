@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration v5.6 (Mode large pour PC et Mobile)
-st.set_page_config(page_title="EJS Expert v6.7", layout="wide")
+# 1. Configuration de l'interface (Mode large pour PC et Mobile)
+st.set_page_config(page_title="EJS Expert v6.8", layout="wide")
 
-st.title("🧪 Expert Élastomères EJS v6.7")
-st.subheader("Analyse de Performance & Synopsis des Notes")
+st.title("🧪 Expert Élastomères EJS v6.8")
+st.subheader("Analyse Technique & Synopsis des Performances")
 
 # --- BASE DE DONNÉES (Strictement inchangée) ---
 data = {
@@ -24,7 +24,7 @@ data = {
 
 df = pd.DataFrame(data)
 
-# --- LOGIQUE DRC (Filtre qualitatif sans modifier la base) ---
+# --- LOGIQUE DRC (Filtre qualitatif automatique) ---
 def evaluer_drc(row):
     if any(x in row["Famille"] for x in ["PTFE", "FKM"]): return "Excellente"
     elif any(x in row["Famille"] for x in ["EPDM", "NBR"]): return "Moyenne"
@@ -32,7 +32,7 @@ def evaluer_drc(row):
 
 df["Qualité DRC"] = df.apply(evaluer_drc, axis=1)
 
-# --- SIDEBAR ---
+# --- SIDEBAR : PARAMÈTRES D'EXPERTISE ---
 with st.sidebar:
     st.header("⚙️ Configuration")
     cols_tech = ["Compound EJS", "Famille", "Dureté", "Couleur", "Norme", "Temp Min", "Temp Max", "Qualité DRC"]
@@ -43,15 +43,43 @@ with st.sidebar:
     t_service = st.slider("Température de service (°C)", -200, 260, 20)
     
     st.write("---")
-    choix_drc = st.multiselect("Filtrer Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Excellente", "Moyenne", "Basse"])
+    choix_drc = st.multiselect("Filtrer par Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Excellente", "Moyenne", "Basse"])
 
 # --- CALCULS ET TRI ---
 df["Score"] = df[f1] + df[f2]
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
-# --- SYNOPSIS DE L'EXPERTISE ---
-st.info(f"""
-**🧐 Synopsis de l'analyse :**
-* Le mélange étudié est composé de **{f1}** et **{f2}**.
-* Les notes de résistance chimique sont évaluées de **1 (Incompatible)** à **5 (Excellente)**.
-* Un Score de **10/10** garantit une sécurité maximale sur les deux fluides.
+# --- SYNOPSIS DE L'ANALYSE ---
+st.info(f"🧐 **Synopsis de l'Expert :** L'analyse porte sur le mélange **{f1}** et **{f2}**. Les notes sont attribuées de 1 (Incompatible) à 5 (Optimale). Un score de 10/10 représente une sécurité totale pour Europe Joints Services.")
+
+# --- AFFICHAGE DU TABLEAU GÉNÉRAL ---
+st.write("### 📊 Synthèse Comparative")
+st.dataframe(df_tri.drop(columns=["Qualité DRC"]), use_container_width=True)
+
+# --- AFFICHAGE DES FICHES DÉTAILLÉES ---
+st.write("---")
+st.write("### 📑 Détail des Notes et Synopsis par Matériau")
+
+for index, row in df_tri.iterrows():
+    temp_ok = row["Temp Min"] <= t_service <= row["Temp Max"]
+    color = "#28a745" if row["Score"] >= 8 and temp_ok else "#fd7e14"
+    if not temp_ok: color = "#dc3545"
+
+    st.markdown(f"""
+        <div style="border: 3px solid {color}; border-radius: 10px; padding: 20px; margin-bottom: 15px; background-color: white; color: black;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <b style="font-size: 1.3em;">{row['Compound EJS']} ({row['Famille']})</b>
+                <b style="font-size: 1.2em; color: {color};">Score : {row['Score']}/10</b>
+            </div>
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
+            <p style="margin: 5px 0;"><b>🔍 Synopsis des notes chimiques :</b></p>
+            <ul style="margin: 5px 0; font-size: 0.95em;">
+                <li>{f1} : <b>{row[f1]}/5</b></li>
+                <li>{f2} : <b>{row[f2]}/5</b></li>
+            </ul>
+            <p style="margin: 10px 0 0 0; font-size: 0.9em; line-height: 1.4;">
+            <b>Performance DRC :</b> {row['Qualité DRC']} | <b>Dureté :</b> {row['Dureté']} | <b>Couleur :</b> {row['Couleur']}<br>
+            <b>Plage d'utilisation :</b> {row['Temp Min']}°C à {row['Temp Max']}°C
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
