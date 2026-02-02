@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration de l'interface
+# 1. Configuration de la page
 st.set_page_config(page_title="Expert Sélecteur EJS", layout="wide")
 
+# Titre Simple
 st.title("🧪 Expert Sélecteur EJS")
-st.subheader("Base Ultra-Expert : 500+ Fluides & 17 Familles d'Élastomères")
+st.subheader("Base expert 500 Fluides")
 
-# --- BASE DE DONNÉES (17 entrées par colonne obligatoires) ---
+# --- BASE DE DONNÉES (17 lignes strictes) ---
 data = {
     "Famille Générique": [
         "EPDM", "NBR", "Viton™ A", "Viton™ GF-S", "Viton™ GFLT-S", "Viton™ Extreme ETP", 
@@ -21,17 +22,16 @@ data = {
     "Temp Min": [-50, -30, -20, -15, -15, -35, -40, -10, -20, -15, -10, -60, -200, -60, -100, -50, -30],
     "Temp Max": [150, 100, 200, 230, 200, 230, 150, 200, 260, 250, 320, 200, 260, 175, 200, 80, 100],
     
-    # --- OPTIONS & FLUIDES ---
+    # --- FLUIDES (STRUCTURE 17 VALEURS) ---
     "SANS CHOIX": [0]*17,
     "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 4, 4, 3, 2],
     "Vapeur (SEP 140°C)": [5, 1, 2, 3, 2, 4, 3, 5, 5, 5, 5, 3, 5, 2, 3, 1, 1],
     "Soude (NEP 2%)": [5, 4, 1, 2, 1, 4, 4, 5, 5, 5, 5, 2, 5, 2, 2, 2, 1],
-    "Acide Sulfurique 98%": [4, 1, 3, 5, 5, 5, 1, 3, 5, 5, 5, 1, 5, 4, 3, 1, 1],
     "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 1, 1, 5],
-    "Eau Potable / Glycolée": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 5, 5, 5]
+    "Acide Sulfurique 98%": [4, 1, 3, 5, 5, 5, 1, 3, 5, 5, 5, 1, 5, 4, 3, 1, 1]
 }
 
-# Mapping Références Europe Joints Services (Correction PMVQ ici)
+# Mapping Commercial EJS
 ejs_refs = {
     "AUCUNE SÉLECTION": None,
     "EJS-E70P": "EPDM", "EJS-N70": "NBR", "EJS-V70": "Viton™ A",
@@ -40,7 +40,7 @@ ejs_refs = {
     "EJS-K75CH": "FFKM (Chimie Std)", "EJS-K75AL": "FFKM (Alimentaire/Vapeur)",
     "EJS-K80HT": "FFKM (Haute Temp)", "EJS-H70": "HNBR", "EJS-S70": "Silicone (VMQ)", 
     "EJS-P70": "PTFE", "EJS-FS70": "Fluorosilicone (FMVQ)", 
-    "EJS-PS70": "Silicone Phénylé (PMVQ)", # Doit être identique à la ligne 15 de 'Famille Générique'
+    "EJS-PS70": "Silicone Phénylé (PMVQ)", # C'est ICI qu'il apparaitra
     "EJS-NR65": "Caoutchouc Naturel (NR)", "EJS-AU90": "Polyuréthane (AU)"
 }
 
@@ -51,62 +51,60 @@ def evaluer_drc(row):
     if any(x in row["Famille Générique"] for x in ["FFKM", "PTFE", "Viton™", "AFLAS"]): return "Excellente"
     elif any(x in row["Famille Générique"] for x in ["EPDM", "NBR", "HNBR", "FMVQ", "AU"]): return "Moyenne"
     else: return "Basse"
-
 df["Qualité DRC"] = df.apply(evaluer_drc, axis=1)
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.header("⚙️ Configuration")
+    st.header("⚙️ Filtres")
     cols_tech = ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max", "Qualité DRC"]
     liste_fluides = sorted([c for c in df.columns if c not in cols_tech])
     
-    idx_sans_choix = liste_fluides.index("SANS CHOIX")
-    
     f1 = st.selectbox("Fluide 1", liste_fluides, index=0)
-    f2 = st.selectbox("Fluide 2", liste_fluides, index=idx_sans_choix)
-    t_service = st.slider("Température (°C)", -200, 350, 20)
+    f2 = st.selectbox("Fluide 2", liste_fluides, index=liste_fluides.index("SANS CHOIX"))
+    t_serv = st.slider("Température (°C)", -200, 350, 20)
     
     st.write("---")
     choix_drc = st.multiselect("Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Excellente", "Moyenne"])
     
     st.write("---")
     st.subheader("🛒 Référence EJS")
-    ref_ejs_choisie = st.selectbox("Référence Europe Joints Services", list(ejs_refs.keys()))
-    famille_cible = ejs_refs[ref_ejs_choisie]
+    ref_ejs = st.selectbox("Référence Europe Joints Services", list(ejs_refs.keys()))
+    famille_cible = ejs_refs[ref_ejs]
 
-# --- CALCULS ET TRI PAR SCORE (FICHES VERTES EN HAUT) ---
+# --- CALCULS ET TRI CRUCIAL ---
 df["Score"] = df[f1] + df[f2]
+# LE TRI PAR SCORE DESCENDANT (Les VERTS en haut)
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
 # --- AFFICHAGE ---
-info_text = f"Analyse pour **{f1}**" if f2 == "SANS CHOIX" else f"Analyse pour **{f1}** et **{f2}**"
-st.info(f"🧐 {info_text}.")
+st.info(f"Analyse : {f1} {'+ ' + f2 if f2 != 'SANS CHOIX' else ''}")
 
-for index, row in df_tri.iterrows():
+for _, row in df_tri.iterrows():
     is_ref = famille_cible == row["Famille Générique"]
-    temp_valid = row["Temp Min"] <= t_service <= row["Temp Max"]
-    seuil_haut = 4 if f2 == "SANS CHOIX" else 8
+    temp_ok = row["Temp Min"] <= t_serv <= row["Temp Max"]
+    seuil = 4 if f2 == "SANS CHOIX" else 8
     
-    if not temp_valid:
-        b_color, bg_color = "#dc3545", "rgba(220, 53, 69, 0.7)"
-    elif row["Score"] >= seuil_haut:
-        b_color, bg_color = "#28a745", "rgba(40, 167, 69, 0.7)"
+    if not temp_ok:
+        b_col, bg_col = "#dc3545", "rgba(220, 53, 69, 0.7)" # ROUGE
+    elif row["Score"] >= seuil:
+        b_col, bg_col = "#28a745", "rgba(40, 167, 69, 0.7)" # VERT
     else:
-        b_color, bg_color = "#fd7e14", "rgba(253, 126, 20, 0.7)"
+        b_col, bg_col = "#fd7e14", "rgba(253, 126, 20, 0.7)" # ORANGE
 
-    b_style = "6px solid white" if is_ref else f"2px solid {b_color}"
+    b_style = "6px solid white" if is_ref else f"2px solid {b_col}"
 
-    # Construction HTML sécurisée par concaténation simple (évite SyntaxError)
-    card = f'<div style="border: {b_style}; border-radius: 12px; padding: 20px; margin-bottom: 15px; background-color: {bg_color}; color: white;">'
-    card += '<div style="display: flex; justify-content: space-between; align-items: center;">'
-    card += f'<b style="font-size: 1.4em;">{row["Famille Générique"]} {"⭐" if is_ref else ""}</b>'
-    card += f'<b style="font-size: 1.2em; color: black; background: white; padding: 4px 12px; border-radius: 8px;">'
-    card += f'Score : {row["Score"]}/{"5" if f2 == "SANS CHOIX" else "10"}</b></div>'
-    card += '<hr style="margin: 10px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">'
-    card += f'<p style="margin: 10px 0 0 0; font-size: 0.95em;">'
-    card += f'<b>Usage :</b> {row["Spécificité"]} | <b>Plage :</b> {row["Temp Min"]}°C / {row["Temp Max"]}°C</p></div>'
-    
-    st.markdown(card, unsafe_allow_html=True)
+    html = f"""
+    <div style="border: {b_style}; border-radius: 10px; padding: 15px; margin-bottom: 10px; background-color: {bg_col}; color: white;">
+        <div style="display: flex; justify-content: space-between;">
+            <b>{row['Famille Générique']} {'⭐' if is_ref else ''}</b>
+            <span style="background: white; color: black; padding: 2px 8px; border-radius: 5px;">Score: {row['Score']}</span>
+        </div>
+        <div style="font-size: 0.85em; margin-top: 5px;">
+            {row['Spécificité']} | {row['Temp Min']}°C à {row['Temp Max']}°C
+        </div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
 
 st.write("---")
-st.dataframe(df_tri.drop(columns=["Qualité DRC", "SANS CHOIX"]), use_container_width=True)
+st.dataframe(df_tri.drop(columns=["Qualité DRC", "SANS CHOIX"]))
