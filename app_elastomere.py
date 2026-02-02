@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 
 # 1. Configuration (Mode large v5.6)
-st.set_page_config(page_title="EJS Expert v7.1", layout="wide")
+st.set_page_config(page_title="EJS Expert v7.2", layout="wide")
 
-st.title("🧪 Expert Élastomères EJS v7.1")
+st.title("🧪 Expert Élastomères EJS v7.2")
 st.subheader("Analyse Technique & Expertise Visuelle")
 
 # --- BASE DE DONNÉES (Strictement inchangée) ---
@@ -43,30 +43,34 @@ with st.sidebar:
     t_service = st.slider("Température de service (°C)", -200, 260, 20)
     
     st.write("---")
-    choix_drc = st.multiselect("Filtrer par Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Excellente", "Moyenne", "Basse"])
+    # MODIFICATION ICI : default=["Moyenne"]
+    choix_drc = st.multiselect(
+        "Filtrer par Qualité DRC", 
+        ["Excellente", "Moyenne", "Basse"], 
+        default=["Moyenne"]
+    )
 
 # --- CALCULS ET TRI ---
 df["Score"] = df[f1] + df[f2]
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
 # --- SYNOPSIS ---
-st.info(f"🧐 **Synopsis :** Étude sur **{f1}** et **{f2}**. Les couleurs de fond indiquent le niveau de recommandation.")
+st.info(f"🧐 **Synopsis :** Étude sur **{f1}** et **{f2}**. Affichage filtré par défaut sur la qualité DRC Moyenne.")
 
-# --- SECTION 1 : FICHES DÉTAILLÉES (TEXTE BLANC SUR FOND COLORÉ) ---
+# --- SECTION 1 : FICHES DÉTAILLÉES (TEXTE BLANC) ---
 st.write("### 📑 Détail des Notes et Synopsis par Matériau")
 
 for index, row in df_tri.iterrows():
     temp_ok = row["Temp Min"] <= t_service <= row["Temp Max"]
     
-    # Définition des couleurs RGBA (Opacité augmentée à 70% pour que le texte blanc soit bien lisible)
     if not temp_ok:
-        border_color = "#dc3545" # Rouge
+        border_color = "#dc3545"
         bg_color = "rgba(220, 53, 69, 0.7)"
     elif row["Score"] >= 8:
-        border_color = "#28a745" # Vert
+        border_color = "#28a745"
         bg_color = "rgba(40, 167, 69, 0.7)"
     else:
-        border_color = "#fd7e14" # Orange
+        border_color = "#fd7e14"
         bg_color = "rgba(253, 126, 20, 0.7)"
 
     st.markdown(f"""
