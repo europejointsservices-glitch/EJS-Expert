@@ -46,7 +46,7 @@ for index, row in df_tri.iterrows():
     color = "#28a745" if row["Score"] >= 8 and temp_ok else "#fd7e14"
     if not temp_ok: color = "#dc3545" # Rouge si hors température
 
-    # Création d'un bloc visuel (Carte)
+   # Création d'un bloc visuel (Carte)
     with st.container():
         st.markdown(f"""
         <div style="border: 3px solid {color}; border-radius: 10px; padding: 15px; margin-bottom: 10px; background-color: #f8f9fa;">
@@ -54,4 +54,4 @@ for index, row in df_tri.iterrows():
             <p style="margin:5px 0;"><b>Performance : {row['Score']}/10</b> (F1: {row[fluide_1]}/5 | F2: {row[fluide_2]}/5)</p>
             <p style="margin:0; font-size: 0.9em;">Plage : {row['Temp Min']}°C à {row['Temp Max']}°C</p>
         </div>
-        """, unsafe_items_allowed=True)
+        """, unsafe_allow_html=True)
