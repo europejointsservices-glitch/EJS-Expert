@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration (Retour au mode large v5.6)
-st.set_page_config(page_title="EJS Expert v6.6", layout="wide")
+# 1. Configuration v5.6 (Mode large pour PC et Mobile)
+st.set_page_config(page_title="EJS Expert v6.7", layout="wide")
 
-st.title("🧪 Expert Élastomères EJS v6.6")
-st.subheader("Filtre DRC Dynamique & Performance")
+st.title("🧪 Expert Élastomères EJS v6.7")
+st.subheader("Analyse de Performance & Synopsis des Notes")
 
 # --- BASE DE DONNÉES (Strictement inchangée) ---
 data = {
@@ -24,21 +24,17 @@ data = {
 
 df = pd.DataFrame(data)
 
-# --- LOGIQUE DE TRADUCTION DRC (Sans changer la base) ---
+# --- LOGIQUE DRC (Filtre qualitatif sans modifier la base) ---
 def evaluer_drc(row):
-    if any(x in row["Famille"] for x in ["PTFE", "FKM"]):
-        return "Excellente"
-    elif any(x in row["Famille"] for x in ["EPDM", "NBR"]):
-        return "Moyenne"
-    else:
-        return "Basse"
+    if any(x in row["Famille"] for x in ["PTFE", "FKM"]): return "Excellente"
+    elif any(x in row["Famille"] for x in ["EPDM", "NBR"]): return "Moyenne"
+    else: return "Basse"
 
 df["Qualité DRC"] = df.apply(evaluer_drc, axis=1)
 
-# --- SIDEBAR (PARAMÈTRES CORRIGÉS) ---
+# --- SIDEBAR ---
 with st.sidebar:
-    st.header("⚙️ Paramètres")
-    # Liste des fluides filtrée pour exclure les colonnes techniques
+    st.header("⚙️ Configuration")
     cols_tech = ["Compound EJS", "Famille", "Dureté", "Couleur", "Norme", "Temp Min", "Temp Max", "Qualité DRC"]
     liste_fluides = [c for c in df.columns if c not in cols_tech]
     
@@ -47,33 +43,15 @@ with st.sidebar:
     t_service = st.slider("Température de service (°C)", -200, 260, 20)
     
     st.write("---")
-    # Filtre qualitatif DRC demandé
-    choix_drc = st.multiselect(
-        "Filtrer par Qualité DRC", 
-        ["Excellente", "Moyenne", "Basse"], 
-        default=["Excellente", "Moyenne", "Basse"]
-    )
+    choix_drc = st.multiselect("Filtrer Qualité DRC", ["Excellente", "Moyenne", "Basse"], default=["Excellente", "Moyenne", "Basse"])
 
-# --- FILTRAGE ET CALCUL ---
+# --- CALCULS ET TRI ---
 df["Score"] = df[f1] + df[f2]
 df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
 
-# --- AFFICHAGE ---
-st.write(f"### 📊 Synthèse Comparative : {f1} + {f2}")
-st.dataframe(df_tri.drop(columns=["Qualité DRC"]), use_container_width=True)
-
-st.write("---")
-st.write("### 📑 Fiches d'Expertise Détaillées")
-
-for index, row in df_tri.iterrows():
-    temp_ok = row["Temp Min"] <= t_service <= row["Temp Max"]
-    color = "#28a745" if row["Score"] >= 8 and temp_ok else "#fd7e14"
-    if not temp_ok: color = "#dc3545"
-
-    st.markdown(f"""
-        <div style="border: 3px solid {color}; border-radius: 10px; padding: 15px; margin-bottom: 10px; background-color: white;">
-            <b style="font-size: 1.1em; color: black;">{row['Compound EJS']} ({row['Famille']})</b><br>
-            <span style="color:{color}; font-weight:bold;">Note : {row['Score']}/10 | DRC : {row['Qualité DRC']}</span><br>
-            <small style="color: black;">Dureté : {row['Dureté']} | Temp : {row['Temp Min']}°C / {row['Temp Max']}°C</small>
-        </div>
-    """, unsafe_allow_html=True)
+# --- SYNOPSIS DE L'EXPERTISE ---
+st.info(f"""
+**🧐 Synopsis de l'analyse :**
+* Le mélange étudié est composé de **{f1}** et **{f2}**.
+* Les notes de résistance chimique sont évaluées de **1 (Incompatible)** à **5 (Excellente)**.
+* Un Score de **10/10** garantit une sécurité maximale sur les deux fluides.
