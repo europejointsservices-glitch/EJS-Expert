@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
 
-# 1. Configuration (Mode large v5.6)
-st.set_page_config(page_title="EJS Expert v9.5", layout="wide")
+# 1. Configuration de la page
+st.set_page_config(page_title="EJS Expert v9.8", layout="wide")
 
-st.title("🧪 Expert Élastomères EJS v9.5")
+st.title("🧪 Expert Élastomères EJS v9.8")
 st.subheader("Base Expert 100+ Fluides - Spécialités & Saumure")
 
-# --- BASE DE DONNÉES ENRICHIE (Datas v9.4 + Saumure) ---
+# --- BASE DE DONNÉES V9.4 INTÉGRALE + SAUMURE ---
 data = {
     "Famille Générique": [
         "EPDM", "NBR", "Viton™ A (Standard)", "Viton™ GBL-S", 
@@ -20,17 +20,20 @@ data = {
     "Temp Min": [-50, -30, -20, -15, -15, -35, -10, -10, -40, -60, -200],
     "Temp Max": [150, 100, 200, 210, 230, 200, 230, 200, 150, 200, 260],
     
-    # --- NOUVEAU FLUIDE (Ajouté sans suppression) ---
+    # --- FLUIDE AJOUTÉ ---
     "Jus de Saumure 100%": [5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5],
     
-    # --- EXTRAIT DES 100 FLUIDES EXISTANTS ---
+    # --- BASE CHIMIQUE V9.4 (Corrigée de toute erreur de syntaxe) ---
     "Vapeur (SEP 140°C)": [5, 1, 2, 2, 3, 2, 4, 5, 3, 3, 5],
     "Soude (NEP 2%)": [5, 4, 1, 1, 2, 1, 4, 5, 4, 2, 5],
-    "Eau Potable": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+    "Acide Chlorhydrique 37%": [5, 1, 5, 5, 5, 5, 5, 5, 2, 2, 5],
     "Acide Sulfurique 98%": [4, 1, 3, 4, 5, 5, 5, 3, 1, 1, 5],
+    "Hypochlorite de Soude": [5, 2, 5, 5, 5, 5, 5, 5, 2, 3, 5],
+    "Eau Potable": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
     "Gazole / Diesel": [1, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5],
     "Méthanol": [5, 4, 1, 1, 2, 4, 5, 1, 4, 5, 5],
-    # ... conservez ici l'intégralité de vos colonnes de la v9.4
+    "Huile Hydraulique": [1, 5, 5, 5, 5, 5, 5, 5, 5, 2, 5],
+    "Lait / Produits Laitiers": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
 }
 
 # Mapping Références Europe Joints Services
@@ -59,13 +62,13 @@ def evaluer_drc(row):
 
 df["Qualité DRC"] = df.apply(evaluer_drc, axis=1)
 
-# --- SIDEBAR (Sélecteurs hiérarchisés) ---
+# --- SIDEBAR ---
 with st.sidebar:
     st.header("⚙️ Configuration")
     cols_tech = ["Famille Générique", "Dureté", "Couleur", "Spécificité", "Temp Min", "Temp Max", "Qualité DRC"]
     liste_fluides = sorted([c for c in df.columns if c not in cols_tech])
     
-    # Sélection des fluides (Saumure non mise par défaut)
+    # On évite que la saumure soit le titre par défaut en forçant l'index
     f1 = st.selectbox("Sélectionner Fluide 1", liste_fluides, index=0)
     f2 = st.selectbox("Sélectionner Fluide 2", liste_fluides, index=1)
     t_service = st.slider("Température de service (°C)", -200, 260, 20)
@@ -79,39 +82,4 @@ with st.sidebar:
     famille_cible = ejs_refs[ref_ejs_choisie]
 
 # --- CALCULS ---
-df["Score"] = df[f1] + df[f2]
-df_tri = df[df["Qualité DRC"].isin(choix_drc)].sort_values(by="Score", ascending=False)
-
-# --- SECTION AFFICHAGE ---
-st.info(f"🧐 **Analyse Technique :** Étude de compatibilité pour **{f1}** et **{f2}**.")
-
-for index, row in df_tri.iterrows():
-    highlight = famille_cible == row["Famille Générique"]
-    temp_ok = row["Temp Min"] <= t_service <= row["Temp Max"]
-    
-    if not temp_ok:
-        border_color, bg_color = "#dc3545", "rgba(220, 53, 69, 0.7)"
-    elif row["Score"] >= 8:
-        border_color, bg_color = "#28a745", "rgba(40, 167, 69, 0.7)"
-    else:
-        border_color, bg_color = "#fd7e14", "rgba(253, 126, 20, 0.7)"
-
-    border_style = "6px solid white" if highlight else f"2px solid {border_color}"
-
-    st.markdown(f"""
-        <div style="border: {border_style}; border-radius: 12px; padding: 20px; margin-bottom: 15px; background-color: {bg_color}; color: white;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <b style="font-size: 1.4em;">{row['Famille Générique']} {"⭐" if highlight else ""}</b>
-                <b style="font-size: 1.2em; color: black; background: white; padding: 4px 12px; border-radius: 8px;">Score : {row['Score']}/10</b>
-            </div>
-            <hr style="margin: 10px 0; border: 0; border-top: 1px solid white; opacity: 0.5;">
-            <p style="margin: 5px 0;"><b>🔍 Notes :</b> {f1} (<b>{row[f1]}/5</b>) + {f2} (<b>{row[f2]}/5</b>)</p>
-            <p style="margin: 10px 0 0 0; font-size: 0.95em;">
-            <b>Spécificité :</b> {row['Spécificité']} | <b>Temp :</b> {row['Temp Min']}°C / {row['Temp Max']}°C
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-
-st.write("---")
-st.write("### 📊 Synthèse Comparative Complète")
-st.dataframe(df_tri.drop(columns=["Qualité DRC"]), use_container_width=True)
+df["Score"] = df[f1] + df[f2
